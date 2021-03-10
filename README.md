@@ -7,8 +7,8 @@ Here are some ideas to get you started:
 
 -->
 
-- 🔭 I’m currently working at Alibaba 
-- 🌱 I’m currently learning TypeScript
+- 🔭 I’m currently using React & TypeScript
+- 🌱 I’m currently learning Flutter
 - 💬 Ask me anything in [here](https://github.com/A-GG/A-GG/issues) 
 - 📖 You can also read all my post in [blog](https://agg.me), the blog repo is below.
 

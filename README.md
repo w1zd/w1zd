@@ -13,5 +13,5 @@ Here are some ideas to get you started:
 - 📖 You can also read all my post in [blog](https://agg.me), the blog repo is below.
 
 
-[![Top Langs](https://github-readme-stats.vercel.app/api/pin/?username=a-gg&hide=html,css&theme=material-palenight&repo=a-gg.github.io)](https://github.com/a-gg/a-gg.github.io)
+[![Top Langs](https://github-readme-stats.vercel.app/api/pin/?username=a-gg&hide=html,css&show_owner=true&repo=a-gg.github.io)](https://github.com/a-gg/a-gg.github.io)
 

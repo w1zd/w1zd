@@ -1,7 +1,9 @@
 name: Gatsby Publish
 
 on:
-  workflow_dispatch
+  - workflow_dispatch
+  - schedule:
+    - cron:  '* * *%1 * *'
 
 jobs:
   build:

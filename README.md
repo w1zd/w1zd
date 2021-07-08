@@ -28,4 +28,4 @@ Here are some ideas to get you started:
 [comment]:<article-list>
 
 
-If you want read more, click [here](https://agg.me/posts/)
+If you want read more, click [here](https://agg.me)

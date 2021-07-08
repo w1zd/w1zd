@@ -12,7 +12,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v1
       - name: Read recent post and update profile
-        uses: ./.github/actions/posttoprofile
+        uses: ./.github/actions/poststoprofile
       - name: Commit and push if changed
         run: |-
           git add .

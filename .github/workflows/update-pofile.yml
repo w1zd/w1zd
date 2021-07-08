@@ -13,6 +13,9 @@ jobs:
         uses: actions/checkout@v1
       - name: Read recent post and update profile
         uses: ./.github/actions/poststoprofile
+      - name: Cat File
+        run: |-
+          cat README.md
       - name: Commit and push if changed
         run: |-
           echo pwd

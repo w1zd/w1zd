@@ -14,6 +14,7 @@ Here are some ideas to get you started:
 
 ### Recent Posts
 [comment]:<article-list>
+- [2021年如何在OSX上安装PIP2](https://agg.me/2021年如何在OSX上安装PIP2/)
 - [fish 使用笔记](https://agg.me/Fish使用笔记/)
 - [定时任务 cron 使用说明](https://agg.me/定时任务CRON使用说明/)
 - [Prismjs 代码高亮支持语言列表](https://agg.me/Prismjs-Highlight-Supported-Language-List/)
@@ -23,7 +24,6 @@ Here are some ideas to get you started:
 - [使用Trojan 的情况下多个 HTTPS 域名部署方案](https://agg.me/trojan-https-多域名部署方案/)
 - [PGP 是怎么工作的](https://agg.me/PGP-是怎么工作的/)
 - [设计 MongoDB Schema 的 6 条经验准则：Part 3](https://agg.me/设计-MongoDB-Schema-的-6-条经验准则-Part-3/)
-- [设计 MongoDB Schema 的 6 条经验准则：Part 2](https://agg.me/设计-MongoDB-Schema-的-6-条经验准则-Part-2/)
 
 [comment]:<article-list>
 

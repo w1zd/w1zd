@@ -1,0 +1,23 @@
+{
+  "name": "a-gg",
+  "version": "1.0.0",
+  "description": "<!-- **A-GG/A-GG** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.",
+  "main": "index.js",
+  "scripts": {
+    "build": "ncc build index.js -o dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/A-GG/A-GG.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/A-GG/A-GG/issues"
+  },
+  "homepage": "https://github.com/A-GG/A-GG#readme",
+  "dependencies": {
+    "@vercel/ncc": "^0.28.6",
+    "cheerio": "^1.0.0-rc.10"
+  }
+}

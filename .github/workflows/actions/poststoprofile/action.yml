@@ -1,0 +1,11 @@
+name: "Posts To Profile"
+description: "Daily pull posts and update profile."
+
+inputs:
+  access-token:
+    description: "A personal access token needed to push your site after it has been built."
+    required: true
+
+runs:
+  using: "node12"
+  main: "./dist/index.js"

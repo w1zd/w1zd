@@ -18,7 +18,7 @@ jobs:
           cat README.md
       - name: Commit and push if changed
         run: |-
-          git checkout origin/master
+          git checkout origin/main
           git add .
           git diff
           git config --global user.email "github-action-bot@example.com"

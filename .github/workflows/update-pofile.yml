@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Read recent post and update profile
         uses: ./.github/actions/poststoprofile
       - name: Cat File
@@ -23,4 +23,4 @@ jobs:
           git config --global user.email "github-action-bot@example.com"
           git config --global user.name "GitHub Action Bot"
           git commit -m "Updated README" -a || echo "No changes to commit"
-          git push origin HEAD:main
+          git push 

@@ -6,13 +6,15 @@
 Here are some ideas to get you started:
 
 -->
-
-- 🔭 I’m currently using React & TypeScript
-- 🌱 I’m currently learning Flutter
+- 🛠 I'm a Front-End skillman
+- 🔭 I’m currently working on Low-Code
+- 🌱 I’m currently learning 
 - 💬 Ask me anything in [here](https://github.com/A-GG/A-GG/issues) 
 - 📖 You can also read all my post in [blog](https://agg.me), below is my recent posts.
 
 ### Recent Posts
+<img align="right" src="https://github-readme-stats.vercel.app/api?username=A-GG&show_icons=true&icon_color=0366d6&text_color=24292e&bg_color=ffffff&hide_title=true" />
+
 [comment]:<article-list>
 - [2021年如何在OSX上安装PIP2](https://agg.me/2021年如何在OSX上安装PIP2/)
 - [fish 使用笔记](https://agg.me/Fish使用笔记/)

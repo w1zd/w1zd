@@ -6,9 +6,9 @@
 Here are some ideas to get you started:
 
 -->
-- 🛠 I'm a Front-End skillman
-- 🔭 I’m currently working on Low-Code
-- 🌱 I’m currently learning 
+- 🛠 Full-Stack Engineer
+- 🔭 Currently working on Low-Code
+- 🌱 Currently learning DevOps
 - 💬 Ask me anything in [here](https://github.com/A-GG/A-GG/issues) 
 - 📖 You can also read all my post in [blog](https://agg.me), below is my recent posts.
 

@@ -6,10 +6,10 @@
 Here are some ideas to get you started:
 
 -->
-- 🛠 I'm a aspiring full-stack engineer
-- 😈 Diverse platform and programming language background
-- 🔭 Currently working on low-code
-- 🌱 Currently learning DevOps
+- 👨🏻‍💻 I'm a aspiring full-stack engineer
+- 📊 Diverse platform and programming language background
+- 🦾 Currently working on low-code
+- 🚧 Currently learning DevOps
 - 💬 Ask me anything in [here](https://github.com/A-GG/A-GG/issues) 
 - 📖 Some individual ideas, technologies, reading reflections are posted in my blog
 - 🍻 If you are interested, welcome to exchange.

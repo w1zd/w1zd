@@ -6,11 +6,12 @@
 Here are some ideas to get you started:
 
 -->
-- 🛠 Full-Stack Engineer
+- 🛠 I'm a full-stack Engineer
 - 🔭 Currently working on Low-Code
 - 🌱 Currently learning DevOps
 - 💬 Ask me anything in [here](https://github.com/A-GG/A-GG/issues) 
-- 📖 You can also read all my post in [blog](https://agg.me), below is my recent posts.
+- 📖 I write thing to share tec and life.
+
 
 <img align="right" src="https://github-readme-stats.vercel.app/api?username=A-GG&show_icons=true&icon_color=0366d6&text_color=24292e&bg_color=ffffff&hide_title=true" />
 

@@ -21,6 +21,7 @@ Here are some ideas to get you started:
 ### Recent Posts
 
 [comment]:<article-list>
+- [家庭布网记录](https://agg.me/家庭布网记录/)
 - [AuthorziedKey配置小记](https://agg.me/AuthorziedKey配置小记/)
 - [2021年如何在OSX上安装PIP2](https://agg.me/2021年如何在OSX上安装PIP2/)
 - [fish 使用笔记](https://agg.me/Fish使用笔记/)
@@ -30,7 +31,6 @@ Here are some ideas to get you started:
 - [HTTP 会话机制及 JWT 深入浅出](https://agg.me/HTTP会话机制及JWT原理浅析/)
 - [Headless Server 是个什么东西？](https://agg.me/Headless-Server-是什么意思？/)
 - [使用Trojan 的情况下多个 HTTPS 域名部署方案](https://agg.me/trojan-https-多域名部署方案/)
-- [PGP 是怎么工作的](https://agg.me/PGP-是怎么工作的/)
 
 [comment]:<article-list>
 

@@ -21,7 +21,7 @@ Here are some ideas to get you started:
 ### Recent Posts
 
 [comment]:<article-list>
-- [家庭布网记录](https://agg.me/家庭布网记录/)
+- [家庭布网实录](https://agg.me/家庭布网实录/)
 - [AuthorziedKey配置小记](https://agg.me/AuthorziedKey配置小记/)
 - [2021年如何在OSX上安装PIP2](https://agg.me/2021年如何在OSX上安装PIP2/)
 - [fish 使用笔记](https://agg.me/Fish使用笔记/)

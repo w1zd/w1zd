@@ -2,7 +2,7 @@ const cheerio = require('cheerio')
 const https = require('https')
 const fs = require('fs');
 
-https.get(`https://agg.me/posts/`, res => {
+https.get(`https://ryan.pub/posts/`, res => {
   let data = ""
   res.on("data", function (chunk) {
     data += chunk;
@@ -11,7 +11,7 @@ https.get(`https://agg.me/posts/`, res => {
     console.log("[success] Pull Recent Posts")
     const $ = cheerio.load(data)
     const result = $('.archive-item a').map((i, v) => {
-      return `- [${v.children[0].data}](https://agg.me${v.attribs.href})`
+      return `- [${v.children[0].data}](https://ryan.pub${v.attribs.href})`
     })
     const targetText = Array.prototype.join.call(result, "\n")
 

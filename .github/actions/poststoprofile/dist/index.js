@@ -66,7 +66,11 @@ var __assign = (this && this.__assign) || function () {
 };
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -83,14 +87,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __spreadArray = (this && this.__spreadArray) || function (to, from) {
-    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
-        to[j] = from[i];
-    return to;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.select = exports.filter = exports.some = exports.is = exports.aliases = exports.pseudos = exports.filters = void 0;
-var css_what_1 = __nccwpck_require__(9218);
+var css_what_1 = __nccwpck_require__(284);
 var css_select_1 = __nccwpck_require__(4508);
 var DomUtils = __importStar(__nccwpck_require__(1754));
 var helpers_1 = __nccwpck_require__(8513);
@@ -102,13 +110,16 @@ Object.defineProperty(exports, "pseudos", ({ enumerable: true, get: function () 
 Object.defineProperty(exports, "aliases", ({ enumerable: true, get: function () { return css_select_2.aliases; } }));
 /** Used to indicate a scope should be filtered. Might be ignored when filtering. */
 var SCOPE_PSEUDO = {
-    type: "pseudo",
+    type: css_what_1.SelectorType.Pseudo,
     name: "scope",
     data: null,
 };
 /** Used for actually filtering for scope. */
 var CUSTOM_SCOPE_PSEUDO = __assign({}, SCOPE_PSEUDO);
-var UNIVERSAL_SELECTOR = { type: "universal", namespace: null };
+var UNIVERSAL_SELECTOR = {
+    type: css_what_1.SelectorType.Universal,
+    namespace: null,
+};
 function is(element, selector, options) {
     if (options === void 0) { options = {}; }
     return some([element], selector, options);
@@ -118,8 +129,8 @@ function some(elements, selector, options) {
     if (options === void 0) { options = {}; }
     if (typeof selector === "function")
         return elements.some(selector);
-    var _a = helpers_1.groupSelectors(css_what_1.parse(selector, options)), plain = _a[0], filtered = _a[1];
-    return ((plain.length > 0 && elements.some(css_select_1._compileToken(plain, options))) ||
+    var _a = (0, helpers_1.groupSelectors)((0, css_what_1.parse)(selector)), plain = _a[0], filtered = _a[1];
+    return ((plain.length > 0 && elements.some((0, css_select_1._compileToken)(plain, options))) ||
         filtered.some(function (sel) { return filterBySelector(sel, elements, options).length > 0; }));
 }
 exports.some = some;
@@ -151,7 +162,7 @@ function filterByPosition(filter, elems, data, options) {
 }
 function filter(selector, elements, options) {
     if (options === void 0) { options = {}; }
-    return filterParsed(css_what_1.parse(selector, options), elements, options);
+    return filterParsed((0, css_what_1.parse)(selector), elements, options);
 }
 exports.filter = filter;
 /**
@@ -166,7 +177,7 @@ exports.filter = filter;
 function filterParsed(selector, elements, options) {
     if (elements.length === 0)
         return [];
-    var _a = helpers_1.groupSelectors(selector), plainSelectors = _a[0], filteredSelectors = _a[1];
+    var _a = (0, helpers_1.groupSelectors)(selector), plainSelectors = _a[0], filteredSelectors = _a[1];
     var found;
     if (plainSelectors.length) {
         var filtered = filterElements(elements, plainSelectors, options);
@@ -219,8 +230,8 @@ function filterBySelector(selector, elements, options) {
          * Get root node, run selector with the scope
          * set to all of our nodes.
          */
-        var root = (_a = options.root) !== null && _a !== void 0 ? _a : helpers_1.getDocumentRoot(elements[0]);
-        var sel = __spreadArray(__spreadArray([], selector), [CUSTOM_SCOPE_PSEUDO]);
+        var root = (_a = options.root) !== null && _a !== void 0 ? _a : (0, helpers_1.getDocumentRoot)(elements[0]);
+        var sel = __spreadArray(__spreadArray([], selector, true), [CUSTOM_SCOPE_PSEUDO], false);
         return findFilterElements(root, sel, options, true, elements);
     }
     // Performance optimization: If we don't have to traverse, just filter set.
@@ -231,7 +242,7 @@ function select(selector, root, options) {
     if (typeof selector === "function") {
         return find(root, selector);
     }
-    var _a = helpers_1.groupSelectors(css_what_1.parse(selector, options)), plain = _a[0], filtered = _a[1];
+    var _a = (0, helpers_1.groupSelectors)((0, css_what_1.parse)(selector)), plain = _a[0], filtered = _a[1];
     var results = filtered.map(function (sel) {
         return findFilterElements(root, sel, options, true);
     });
@@ -239,16 +250,22 @@ function select(selector, root, options) {
     if (plain.length) {
         results.push(findElements(root, plain, options, Infinity));
     }
+    if (results.length === 0) {
+        return [];
+    }
     // If there was only a single selector, just return the result
     if (results.length === 1) {
         return results[0];
     }
     // Sort results, filtering for duplicates
-    return DomUtils.uniqueSort(results.reduce(function (a, b) { return __spreadArray(__spreadArray([], a), b); }));
+    return DomUtils.uniqueSort(results.reduce(function (a, b) { return __spreadArray(__spreadArray([], a, true), b, true); }));
 }
 exports.select = select;
 // Traversals that are treated differently in css-select.
-var specialTraversal = new Set(["descendant", "adjacent"]);
+var specialTraversal = new Set([
+    css_what_1.SelectorType.Descendant,
+    css_what_1.SelectorType.Adjacent,
+]);
 function includesScopePseudo(t) {
     return (t !== SCOPE_PSEUDO &&
         t.type === "pseudo" &&
@@ -276,7 +293,7 @@ function findFilterElements(root, selector, options, queryForSelector, scopeCont
      * Set the number of elements to retrieve.
      * Eg. for :first, we only have to get a single element.
      */
-    var limit = positionals_1.getLimit(filter.name, filter.data);
+    var limit = (0, positionals_1.getLimit)(filter.name, filter.data);
     if (limit === 0)
         return [];
     var subOpts = addContextIfScope(sub, options, scopeContext);
@@ -333,19 +350,19 @@ function findFilterElements(root, selector, options, queryForSelector, scopeCont
 function findElements(root, sel, options, limit) {
     if (limit === 0)
         return [];
-    var query = css_select_1._compileToken(sel, options, root);
+    var query = (0, css_select_1._compileToken)(sel, options, root);
     return find(root, query, limit);
 }
 function find(root, query, limit) {
     if (limit === void 0) { limit = Infinity; }
-    var elems = css_select_1.prepareContext(root, DomUtils, query.shouldTestNextSiblings);
+    var elems = (0, css_select_1.prepareContext)(root, DomUtils, query.shouldTestNextSiblings);
     return DomUtils.find(function (node) { return DomUtils.isTag(node) && query(node); }, elems, true, limit);
 }
 function filterElements(elements, sel, options) {
     var els = (Array.isArray(elements) ? elements : [elements]).filter(DomUtils.isTag);
     if (els.length === 0)
         return els;
-    var query = css_select_1._compileToken(sel, options);
+    var query = (0, css_select_1._compileToken)(sel, options);
     return els.filter(query);
 }
 
@@ -3738,14 +3755,75 @@ function escapeRegex(value) {
     return value.replace(reChars, "\\$&");
 }
 /**
+ * Attributes that are case-insensitive in HTML.
+ *
+ * @private
+ * @see https://html.spec.whatwg.org/multipage/semantics-other.html#case-sensitivity-of-selectors
+ */
+var caseInsensitiveAttributes = new Set([
+    "accept",
+    "accept-charset",
+    "align",
+    "alink",
+    "axis",
+    "bgcolor",
+    "charset",
+    "checked",
+    "clear",
+    "codetype",
+    "color",
+    "compact",
+    "declare",
+    "defer",
+    "dir",
+    "direction",
+    "disabled",
+    "enctype",
+    "face",
+    "frame",
+    "hreflang",
+    "http-equiv",
+    "lang",
+    "language",
+    "link",
+    "media",
+    "method",
+    "multiple",
+    "nohref",
+    "noresize",
+    "noshade",
+    "nowrap",
+    "readonly",
+    "rel",
+    "rev",
+    "rules",
+    "scope",
+    "scrolling",
+    "selected",
+    "shape",
+    "target",
+    "text",
+    "type",
+    "valign",
+    "valuetype",
+    "vlink",
+]);
+function shouldIgnoreCase(selector, options) {
+    return typeof selector.ignoreCase === "boolean"
+        ? selector.ignoreCase
+        : selector.ignoreCase === "quirks"
+            ? !!options.quirksMode
+            : !options.xmlMode && caseInsensitiveAttributes.has(selector.name);
+}
+/**
  * Attribute selectors
  */
 exports.attributeRules = {
-    equals: function (next, data, _a) {
-        var adapter = _a.adapter;
+    equals: function (next, data, options) {
+        var adapter = options.adapter;
         var name = data.name;
         var value = data.value;
-        if (data.ignoreCase) {
+        if (shouldIgnoreCase(data, options)) {
             value = value.toLowerCase();
             return function (elem) {
                 var attr = adapter.getAttributeValue(elem, name);
@@ -3759,12 +3837,12 @@ exports.attributeRules = {
             return adapter.getAttributeValue(elem, name) === value && next(elem);
         };
     },
-    hyphen: function (next, data, _a) {
-        var adapter = _a.adapter;
+    hyphen: function (next, data, options) {
+        var adapter = options.adapter;
         var name = data.name;
         var value = data.value;
         var len = value.length;
-        if (data.ignoreCase) {
+        if (shouldIgnoreCase(data, options)) {
             value = value.toLowerCase();
             return function hyphenIC(elem) {
                 var attr = adapter.getAttributeValue(elem, name);
@@ -3782,13 +3860,13 @@ exports.attributeRules = {
                 next(elem));
         };
     },
-    element: function (next, _a, _b) {
-        var name = _a.name, value = _a.value, ignoreCase = _a.ignoreCase;
-        var adapter = _b.adapter;
+    element: function (next, data, options) {
+        var adapter = options.adapter;
+        var name = data.name, value = data.value;
         if (/\s/.test(value)) {
             return boolbase_1.falseFunc;
         }
-        var regex = new RegExp("(?:^|\\s)" + escapeRegex(value) + "(?:$|\\s)", ignoreCase ? "i" : "");
+        var regex = new RegExp("(?:^|\\s)".concat(escapeRegex(value), "(?:$|\\s)"), shouldIgnoreCase(data, options) ? "i" : "");
         return function element(elem) {
             var attr = adapter.getAttributeValue(elem, name);
             return (attr != null &&
@@ -3802,15 +3880,15 @@ exports.attributeRules = {
         var adapter = _b.adapter;
         return function (elem) { return adapter.hasAttrib(elem, name) && next(elem); };
     },
-    start: function (next, data, _a) {
-        var adapter = _a.adapter;
+    start: function (next, data, options) {
+        var adapter = options.adapter;
         var name = data.name;
         var value = data.value;
         var len = value.length;
         if (len === 0) {
             return boolbase_1.falseFunc;
         }
-        if (data.ignoreCase) {
+        if (shouldIgnoreCase(data, options)) {
             value = value.toLowerCase();
             return function (elem) {
                 var attr = adapter.getAttributeValue(elem, name);
@@ -3826,15 +3904,15 @@ exports.attributeRules = {
                 next(elem);
         };
     },
-    end: function (next, data, _a) {
-        var adapter = _a.adapter;
+    end: function (next, data, options) {
+        var adapter = options.adapter;
         var name = data.name;
         var value = data.value;
         var len = -value.length;
         if (len === 0) {
             return boolbase_1.falseFunc;
         }
-        if (data.ignoreCase) {
+        if (shouldIgnoreCase(data, options)) {
             value = value.toLowerCase();
             return function (elem) {
                 var _a;
@@ -3848,13 +3926,13 @@ exports.attributeRules = {
                 next(elem);
         };
     },
-    any: function (next, data, _a) {
-        var adapter = _a.adapter;
+    any: function (next, data, options) {
+        var adapter = options.adapter;
         var name = data.name, value = data.value;
         if (value === "") {
             return boolbase_1.falseFunc;
         }
-        if (data.ignoreCase) {
+        if (shouldIgnoreCase(data, options)) {
             var regex_1 = new RegExp(escapeRegex(value), "i");
             return function anyIC(elem) {
                 var attr = adapter.getAttributeValue(elem, name);
@@ -3870,8 +3948,8 @@ exports.attributeRules = {
                 next(elem);
         };
     },
-    not: function (next, data, _a) {
-        var adapter = _a.adapter;
+    not: function (next, data, options) {
+        var adapter = options.adapter;
         var name = data.name;
         var value = data.value;
         if (value === "") {
@@ -3879,7 +3957,7 @@ exports.attributeRules = {
                 return !!adapter.getAttributeValue(elem, name) && next(elem);
             };
         }
-        else if (data.ignoreCase) {
+        else if (shouldIgnoreCase(data, options)) {
             value = value.toLowerCase();
             return function (elem) {
                 var attr = adapter.getAttributeValue(elem, name);
@@ -3908,7 +3986,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.compileToken = exports.compileUnsafe = exports.compile = void 0;
-var css_what_1 = __nccwpck_require__(9218);
+var css_what_1 = __nccwpck_require__(284);
 var boolbase_1 = __nccwpck_require__(4159);
 var sort_1 = __importDefault(__nccwpck_require__(7320));
 var procedure_1 = __nccwpck_require__(7396);
@@ -3923,11 +4001,11 @@ var subselects_1 = __nccwpck_require__(5813);
  */
 function compile(selector, options, context) {
     var next = compileUnsafe(selector, options, context);
-    return subselects_1.ensureIsTag(next, options.adapter);
+    return (0, subselects_1.ensureIsTag)(next, options.adapter);
 }
 exports.compile = compile;
 function compileUnsafe(selector, options, context) {
-    var token = typeof selector === "string" ? css_what_1.parse(selector, options) : selector;
+    var token = typeof selector === "string" ? (0, css_what_1.parse)(selector) : selector;
     return compileToken(token, options, context);
 }
 exports.compileUnsafe = compileUnsafe;
@@ -3937,11 +4015,15 @@ function includesScopePseudo(t) {
             (Array.isArray(t.data) &&
                 t.data.some(function (data) { return data.some(includesScopePseudo); }))));
 }
-var DESCENDANT_TOKEN = { type: "descendant" };
+var DESCENDANT_TOKEN = { type: css_what_1.SelectorType.Descendant };
 var FLEXIBLE_DESCENDANT_TOKEN = {
     type: "_flexibleDescendant",
 };
-var SCOPE_TOKEN = { type: "pseudo", name: "scope", data: null };
+var SCOPE_TOKEN = {
+    type: css_what_1.SelectorType.Pseudo,
+    name: "scope",
+    data: null,
+};
 /*
  * CSS 4 Spec (Draft): 3.3.1. Absolutizing a Scope-relative Selector
  * http://www.w3.org/TR/selectors4/#absolutizing
@@ -3955,7 +4037,7 @@ function absolutize(token, _a, context) {
     }));
     for (var _i = 0, token_1 = token; _i < token_1.length; _i++) {
         var t = token_1[_i];
-        if (t.length > 0 && procedure_1.isTraversal(t[0]) && t[0].type !== "descendant") {
+        if (t.length > 0 && (0, procedure_1.isTraversal)(t[0]) && t[0].type !== "descendant") {
             // Don't continue in else branch
         }
         else if (hasContext && !t.some(includesScopePseudo)) {
@@ -4003,7 +4085,7 @@ function compileRules(rules, options, context) {
     return rules.reduce(function (previous, rule) {
         return previous === boolbase_1.falseFunc
             ? boolbase_1.falseFunc
-            : general_1.compileGeneralSelector(previous, rule, options, context, compileToken);
+            : (0, general_1.compileGeneralSelector)(previous, rule, options, context, compileToken);
     }, (_a = options.rootFunc) !== null && _a !== void 0 ? _a : boolbase_1.trueFunc);
 }
 function reduceRules(a, b) {
@@ -4030,25 +4112,46 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.compileGeneralSelector = void 0;
 var attributes_1 = __nccwpck_require__(6863);
 var pseudo_selectors_1 = __nccwpck_require__(9312);
+var css_what_1 = __nccwpck_require__(284);
 /*
  * All available rules
  */
 function compileGeneralSelector(next, selector, options, context, compileToken) {
     var adapter = options.adapter, equals = options.equals;
     switch (selector.type) {
-        case "pseudo-element":
+        case css_what_1.SelectorType.PseudoElement: {
             throw new Error("Pseudo-elements are not supported by css-select");
-        case "attribute":
+        }
+        case css_what_1.SelectorType.ColumnCombinator: {
+            throw new Error("Column combinators are not yet supported by css-select");
+        }
+        case css_what_1.SelectorType.Attribute: {
+            if (selector.namespace != null) {
+                throw new Error("Namespaced attributes are not yet supported by css-select");
+            }
+            if (!options.xmlMode || options.lowerCaseAttributeNames) {
+                selector.name = selector.name.toLowerCase();
+            }
             return attributes_1.attributeRules[selector.action](next, selector, options);
-        case "pseudo":
-            return pseudo_selectors_1.compilePseudoSelector(next, selector, options, context, compileToken);
+        }
+        case css_what_1.SelectorType.Pseudo: {
+            return (0, pseudo_selectors_1.compilePseudoSelector)(next, selector, options, context, compileToken);
+        }
         // Tags
-        case "tag":
+        case css_what_1.SelectorType.Tag: {
+            if (selector.namespace != null) {
+                throw new Error("Namespaced tag names are not yet supported by css-select");
+            }
+            var name_1 = selector.name;
+            if (!options.xmlMode || options.lowerCaseTags) {
+                name_1 = name_1.toLowerCase();
+            }
             return function tag(elem) {
-                return adapter.getName(elem) === selector.name && next(elem);
+                return adapter.getName(elem) === name_1 && next(elem);
             };
+        }
         // Traversal
-        case "descendant":
+        case css_what_1.SelectorType.Descendant: {
             if (options.cacheResults === false ||
                 typeof WeakSet === "undefined") {
                 return function descendant(elem) {
@@ -4062,7 +4165,6 @@ function compileGeneralSelector(next, selector, options, context, compileToken) 
                 };
             }
             // @ts-expect-error `ElementNode` is not extending object
-            // eslint-disable-next-line no-case-declarations
             var isFalseCache_1 = new WeakSet();
             return function cachedDescendant(elem) {
                 var current = elem;
@@ -4076,7 +4178,8 @@ function compileGeneralSelector(next, selector, options, context, compileToken) 
                 }
                 return false;
             };
-        case "_flexibleDescendant":
+        }
+        case "_flexibleDescendant": {
             // Include element itself, only used while querying an array
             return function flexibleDescendant(elem) {
                 var current = elem;
@@ -4086,18 +4189,21 @@ function compileGeneralSelector(next, selector, options, context, compileToken) 
                 } while ((current = adapter.getParent(current)));
                 return false;
             };
-        case "parent":
+        }
+        case css_what_1.SelectorType.Parent: {
             return function parent(elem) {
                 return adapter
                     .getChildren(elem)
                     .some(function (elem) { return adapter.isTag(elem) && next(elem); });
             };
-        case "child":
+        }
+        case css_what_1.SelectorType.Child: {
             return function child(elem) {
                 var parent = adapter.getParent(elem);
                 return parent != null && adapter.isTag(parent) && next(parent);
             };
-        case "sibling":
+        }
+        case css_what_1.SelectorType.Sibling: {
             return function sibling(elem) {
                 var siblings = adapter.getSiblings(elem);
                 for (var i = 0; i < siblings.length; i++) {
@@ -4110,7 +4216,14 @@ function compileGeneralSelector(next, selector, options, context, compileToken) 
                 }
                 return false;
             };
-        case "adjacent":
+        }
+        case css_what_1.SelectorType.Adjacent: {
+            if (adapter.prevElementSibling) {
+                return function adjacent(elem) {
+                    var previous = adapter.prevElementSibling(elem);
+                    return previous != null && next(previous);
+                };
+            }
             return function adjacent(elem) {
                 var siblings = adapter.getSiblings(elem);
                 var lastElement;
@@ -4124,8 +4237,13 @@ function compileGeneralSelector(next, selector, options, context, compileToken) 
                 }
                 return !!lastElement && next(lastElement);
             };
-        case "universal":
+        }
+        case css_what_1.SelectorType.Universal: {
+            if (selector.namespace != null && selector.namespace !== "*") {
+                throw new Error("Namespaced universal selectors are not yet supported by css-select");
+            }
             return next;
+        }
     }
 }
 exports.compileGeneralSelector = compileGeneralSelector;
@@ -4140,7 +4258,11 @@ exports.compileGeneralSelector = compileGeneralSelector;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -4197,7 +4319,7 @@ function getSelectorFunc(searchFunc) {
     return function select(query, elements, options) {
         var opts = convertOptionFormats(options);
         if (typeof query !== "function") {
-            query = compile_1.compileUnsafe(query, opts, elements);
+            query = (0, compile_1.compileUnsafe)(query, opts, elements);
         }
         var filteredElements = prepareContext(elements, opts.adapter, query.shouldTestNextSiblings);
         return searchFunc(query, filteredElements, opts);
@@ -4220,8 +4342,9 @@ exports.prepareContext = prepareContext;
 function appendNextSiblings(elem, adapter) {
     // Order matters because jQuery seems to check the children before the siblings
     var elems = Array.isArray(elem) ? elem.slice(0) : [elem];
-    for (var i = 0; i < elems.length; i++) {
-        var nextSiblings = subselects_1.getNextSiblings(elems[i], adapter);
+    var elemsLength = elems.length;
+    for (var i = 0; i < elemsLength; i++) {
+        var nextSiblings = (0, subselects_1.getNextSiblings)(elems[i], adapter);
         elems.push.apply(elems, nextSiblings);
     }
     return elems;
@@ -4268,7 +4391,7 @@ exports.selectOne = getSelectorFunc(function (query, elems, options) {
  */
 function is(elem, query, options) {
     var opts = convertOptionFormats(options);
-    return (typeof query === "function" ? query : compile_1.compile(query, opts))(elem);
+    return (typeof query === "function" ? query : (0, compile_1.compile)(query, opts))(elem);
 }
 exports.is = is;
 /**
@@ -4298,6 +4421,7 @@ exports.procedure = {
     attribute: 1,
     pseudo: 0,
     "pseudo-element": 0,
+    "column-combinator": -1,
     descendant: -1,
     child: -1,
     parent: -1,
@@ -4390,7 +4514,7 @@ exports.filters = {
     // Location specific methods
     "nth-child": function (next, rule, _a) {
         var adapter = _a.adapter, equals = _a.equals;
-        var func = nth_check_1.default(rule);
+        var func = (0, nth_check_1.default)(rule);
         if (func === boolbase_1.falseFunc)
             return boolbase_1.falseFunc;
         if (func === boolbase_1.trueFunc)
@@ -4410,7 +4534,7 @@ exports.filters = {
     },
     "nth-last-child": function (next, rule, _a) {
         var adapter = _a.adapter, equals = _a.equals;
-        var func = nth_check_1.default(rule);
+        var func = (0, nth_check_1.default)(rule);
         if (func === boolbase_1.falseFunc)
             return boolbase_1.falseFunc;
         if (func === boolbase_1.trueFunc)
@@ -4430,7 +4554,7 @@ exports.filters = {
     },
     "nth-of-type": function (next, rule, _a) {
         var adapter = _a.adapter, equals = _a.equals;
-        var func = nth_check_1.default(rule);
+        var func = (0, nth_check_1.default)(rule);
         if (func === boolbase_1.falseFunc)
             return boolbase_1.falseFunc;
         if (func === boolbase_1.trueFunc)
@@ -4452,7 +4576,7 @@ exports.filters = {
     },
     "nth-last-of-type": function (next, rule, _a) {
         var adapter = _a.adapter, equals = _a.equals;
-        var func = nth_check_1.default(rule);
+        var func = (0, nth_check_1.default)(rule);
         if (func === boolbase_1.falseFunc)
             return boolbase_1.falseFunc;
         if (func === boolbase_1.trueFunc)
@@ -4540,7 +4664,7 @@ exports.compilePseudoSelector = exports.aliases = exports.pseudos = exports.filt
  * Pseudos should be used to implement simple checks.
  */
 var boolbase_1 = __nccwpck_require__(4159);
-var css_what_1 = __nccwpck_require__(9218);
+var css_what_1 = __nccwpck_require__(284);
 var filters_1 = __nccwpck_require__(1686);
 Object.defineProperty(exports, "filters", ({ enumerable: true, get: function () { return filters_1.filters; } }));
 var pseudos_1 = __nccwpck_require__(8952);
@@ -4555,10 +4679,10 @@ function compilePseudoSelector(next, selector, options, context, compileToken) {
     }
     if (name in aliases_1.aliases) {
         if (data != null) {
-            throw new Error("Pseudo " + name + " doesn't have any arguments");
+            throw new Error("Pseudo ".concat(name, " doesn't have any arguments"));
         }
         // The alias has to be parsed here, to make sure options are respected.
-        var alias = css_what_1.parse(aliases_1.aliases[name], options);
+        var alias = (0, css_what_1.parse)(aliases_1.aliases[name]);
         return subselects_1.subselects.is(next, alias, options, context, compileToken);
     }
     if (name in filters_1.filters) {
@@ -4566,14 +4690,14 @@ function compilePseudoSelector(next, selector, options, context, compileToken) {
     }
     if (name in pseudos_1.pseudos) {
         var pseudo_1 = pseudos_1.pseudos[name];
-        pseudos_1.verifyPseudoArgs(pseudo_1, name, data);
+        (0, pseudos_1.verifyPseudoArgs)(pseudo_1, name, data);
         return pseudo_1 === boolbase_1.falseFunc
             ? boolbase_1.falseFunc
             : next === boolbase_1.trueFunc
                 ? function (elem) { return pseudo_1(elem, options, data); }
                 : function (elem) { return pseudo_1(elem, options, data) && next(elem); };
     }
-    throw new Error("unmatched pseudo-class :" + name);
+    throw new Error("unmatched pseudo-class :".concat(name));
 }
 exports.compilePseudoSelector = compilePseudoSelector;
 
@@ -4665,11 +4789,11 @@ exports.pseudos = {
 function verifyPseudoArgs(func, name, subselect) {
     if (subselect === null) {
         if (func.length > 2) {
-            throw new Error("pseudo-selector :" + name + " requires an argument");
+            throw new Error("pseudo-selector :".concat(name, " requires an argument"));
         }
     }
     else if (func.length === 2) {
-        throw new Error("pseudo-selector :" + name + " doesn't have any arguments");
+        throw new Error("pseudo-selector :".concat(name, " doesn't have any arguments"));
     }
 }
 exports.verifyPseudoArgs = verifyPseudoArgs;
@@ -4682,10 +4806,14 @@ exports.verifyPseudoArgs = verifyPseudoArgs;
 
 "use strict";
 
-var __spreadArray = (this && this.__spreadArray) || function (to, from) {
-    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
-        to[j] = from[i];
-    return to;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.subselects = exports.getNextSiblings = exports.ensureIsTag = exports.PLACEHOLDER_ELEMENT = void 0;
@@ -4719,16 +4847,17 @@ var is = function (next, token, options, context, compileToken) {
     return function (elem) { return func(elem) && next(elem); };
 };
 /*
- * :not, :has, :is and :matches have to compile selectors
+ * :not, :has, :is, :matches and :where have to compile selectors
  * doing this in src/pseudos.ts would lead to circular dependencies,
  * so we add them here
  */
 exports.subselects = {
     is: is,
     /**
-     * `:matches` is an alias for `:is`.
+     * `:matches` and `:where` are aliases for `:is`.
      */
     matches: is,
+    where: is,
     not: function (next, token, options, context, compileToken) {
         var opts = {
             xmlMode: !!options.xmlMode,
@@ -4776,7 +4905,7 @@ exports.subselects = {
                 context[0] = elem;
                 var childs = adapter.getChildren(elem);
                 var nextElements = shouldTestNextSiblings
-                    ? __spreadArray(__spreadArray([], childs), getNextSiblings(elem, adapter)) : childs;
+                    ? __spreadArray(__spreadArray([], childs, true), getNextSiblings(elem, adapter), true) : childs;
                 return (next(elem) && adapter.existsOne(hasElement, nextElements));
             };
         }
@@ -4796,6 +4925,7 @@ exports.subselects = {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+var css_what_1 = __nccwpck_require__(284);
 var procedure_1 = __nccwpck_require__(7396);
 var attributes = {
     exists: 10,
@@ -4832,7 +4962,7 @@ function sortByProcedure(arr) {
 exports.default = sortByProcedure;
 function getProcedure(token) {
     var proc = procedure_1.procedure[token.type];
-    if (token.type === "attribute") {
+    if (token.type === css_what_1.SelectorType.Attribute) {
         proc = attributes[token.action];
         if (proc === attributes.equals && token.name === "id") {
             // Prefer ID selectors (eg. #ID)
@@ -4846,7 +4976,7 @@ function getProcedure(token) {
             proc >>= 1;
         }
     }
-    else if (token.type === "pseudo") {
+    else if (token.type === css_what_1.SelectorType.Pseudo) {
         if (!token.data) {
             proc = 3;
         }
@@ -4882,14 +5012,18 @@ function getProcedure(token) {
 
 /***/ }),
 
-/***/ 9218:
+/***/ 284:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -4897,117 +5031,45 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.stringify = exports.parse = void 0;
-__exportStar(__nccwpck_require__(7751), exports);
-var parse_1 = __nccwpck_require__(7751);
-Object.defineProperty(exports, "parse", ({ enumerable: true, get: function () { return __importDefault(parse_1).default; } }));
-var stringify_1 = __nccwpck_require__(586);
-Object.defineProperty(exports, "stringify", ({ enumerable: true, get: function () { return __importDefault(stringify_1).default; } }));
+exports.stringify = exports.parse = exports.isTraversal = void 0;
+__exportStar(__nccwpck_require__(8752), exports);
+var parse_1 = __nccwpck_require__(7255);
+Object.defineProperty(exports, "isTraversal", ({ enumerable: true, get: function () { return parse_1.isTraversal; } }));
+Object.defineProperty(exports, "parse", ({ enumerable: true, get: function () { return parse_1.parse; } }));
+var stringify_1 = __nccwpck_require__(9265);
+Object.defineProperty(exports, "stringify", ({ enumerable: true, get: function () { return stringify_1.stringify; } }));
 
 
 /***/ }),
 
-/***/ 7751:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ 7255:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __spreadArray = (this && this.__spreadArray) || function (to, from) {
-    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
-        to[j] = from[i];
-    return to;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isTraversal = void 0;
+exports.parse = exports.isTraversal = void 0;
+var types_1 = __nccwpck_require__(8752);
 var reName = /^[^\\#]?(?:\\(?:[\da-f]{1,6}\s?|.)|[\w\-\u00b0-\uFFFF])+/;
 var reEscape = /\\([\da-f]{1,6}\s?|(\s)|.)/gi;
 var actionTypes = new Map([
-    ["~", "element"],
-    ["^", "start"],
-    ["$", "end"],
-    ["*", "any"],
-    ["!", "not"],
-    ["|", "hyphen"],
+    [126 /* Tilde */, types_1.AttributeAction.Element],
+    [94 /* Circumflex */, types_1.AttributeAction.Start],
+    [36 /* Dollar */, types_1.AttributeAction.End],
+    [42 /* Asterisk */, types_1.AttributeAction.Any],
+    [33 /* ExclamationMark */, types_1.AttributeAction.Not],
+    [124 /* Pipe */, types_1.AttributeAction.Hyphen],
 ]);
-var Traversals = {
-    ">": "child",
-    "<": "parent",
-    "~": "sibling",
-    "+": "adjacent",
-};
-var attribSelectors = {
-    "#": ["id", "equals"],
-    ".": ["class", "element"],
-};
 // Pseudos, whose data property is parsed as well.
 var unpackPseudos = new Set([
     "has",
     "not",
     "matches",
     "is",
+    "where",
     "host",
     "host-context",
-]);
-var traversalNames = new Set(__spreadArray([
-    "descendant"
-], Object.keys(Traversals).map(function (k) { return Traversals[k]; })));
-/**
- * Attributes that are case-insensitive in HTML.
- *
- * @private
- * @see https://html.spec.whatwg.org/multipage/semantics-other.html#case-sensitivity-of-selectors
- */
-var caseInsensitiveAttributes = new Set([
-    "accept",
-    "accept-charset",
-    "align",
-    "alink",
-    "axis",
-    "bgcolor",
-    "charset",
-    "checked",
-    "clear",
-    "codetype",
-    "color",
-    "compact",
-    "declare",
-    "defer",
-    "dir",
-    "direction",
-    "disabled",
-    "enctype",
-    "face",
-    "frame",
-    "hreflang",
-    "http-equiv",
-    "lang",
-    "language",
-    "link",
-    "media",
-    "method",
-    "multiple",
-    "nohref",
-    "noresize",
-    "noshade",
-    "nowrap",
-    "readonly",
-    "rel",
-    "rev",
-    "rules",
-    "scope",
-    "scrolling",
-    "selected",
-    "shape",
-    "target",
-    "text",
-    "type",
-    "valign",
-    "valuetype",
-    "vlink",
 ]);
 /**
  * Checks whether a specific selector is a traversal.
@@ -5017,11 +5079,20 @@ var caseInsensitiveAttributes = new Set([
  * @param selector Selector to check.
  */
 function isTraversal(selector) {
-    return traversalNames.has(selector.type);
+    switch (selector.type) {
+        case types_1.SelectorType.Adjacent:
+        case types_1.SelectorType.Child:
+        case types_1.SelectorType.Descendant:
+        case types_1.SelectorType.Parent:
+        case types_1.SelectorType.Sibling:
+        case types_1.SelectorType.ColumnCombinator:
+            return true;
+        default:
+            return false;
+    }
 }
 exports.isTraversal = isTraversal;
 var stripQuotesFromPseudos = new Set(["contains", "icontains"]);
-var quotes = new Set(['"', "'"]);
 // Unescape function taken from https://github.com/jquery/sizzle/blob/master/src/sizzle.js#L152
 function funescape(_, escaped, escapedWhitespace) {
     var high = parseInt(escaped, 16) - 0x10000;
@@ -5037,8 +5108,15 @@ function funescape(_, escaped, escapedWhitespace) {
 function unescapeCSS(str) {
     return str.replace(reEscape, funescape);
 }
+function isQuote(c) {
+    return c === 39 /* SingleQuote */ || c === 34 /* DoubleQuote */;
+}
 function isWhitespace(c) {
-    return c === " " || c === "\n" || c === "\t" || c === "\f" || c === "\r";
+    return (c === 32 /* Space */ ||
+        c === 9 /* Tab */ ||
+        c === 10 /* NewLine */ ||
+        c === 12 /* FormFeed */ ||
+        c === 13 /* CarriageReturn */);
 }
 /**
  * Parses `selector`, optionally with the passed `options`.
@@ -5049,37 +5127,57 @@ function isWhitespace(c) {
  * The first dimension represents selectors separated by commas (eg. `sub1, sub2`),
  * the second contains the relevant tokens for that selector.
  */
-function parse(selector, options) {
+function parse(selector) {
     var subselects = [];
-    var endIndex = parseSelector(subselects, "" + selector, options, 0);
+    var endIndex = parseSelector(subselects, "".concat(selector), 0);
     if (endIndex < selector.length) {
-        throw new Error("Unmatched selector: " + selector.slice(endIndex));
+        throw new Error("Unmatched selector: ".concat(selector.slice(endIndex)));
     }
     return subselects;
 }
-exports.default = parse;
-function parseSelector(subselects, selector, options, selectorIndex) {
-    var _a, _b;
-    if (options === void 0) { options = {}; }
+exports.parse = parse;
+function parseSelector(subselects, selector, selectorIndex) {
     var tokens = [];
-    var sawWS = false;
     function getName(offset) {
         var match = selector.slice(selectorIndex + offset).match(reName);
         if (!match) {
-            throw new Error("Expected name, found " + selector.slice(selectorIndex));
+            throw new Error("Expected name, found ".concat(selector.slice(selectorIndex)));
         }
         var name = match[0];
         selectorIndex += offset + name.length;
         return unescapeCSS(name);
     }
     function stripWhitespace(offset) {
-        while (isWhitespace(selector.charAt(selectorIndex + offset)))
-            offset++;
         selectorIndex += offset;
+        while (selectorIndex < selector.length &&
+            isWhitespace(selector.charCodeAt(selectorIndex))) {
+            selectorIndex++;
+        }
+    }
+    function readValueWithParenthesis() {
+        selectorIndex += 1;
+        var start = selectorIndex;
+        var counter = 1;
+        for (; counter > 0 && selectorIndex < selector.length; selectorIndex++) {
+            if (selector.charCodeAt(selectorIndex) ===
+                40 /* LeftParenthesis */ &&
+                !isEscaped(selectorIndex)) {
+                counter++;
+            }
+            else if (selector.charCodeAt(selectorIndex) ===
+                41 /* RightParenthesis */ &&
+                !isEscaped(selectorIndex)) {
+                counter--;
+            }
+        }
+        if (counter) {
+            throw new Error("Parenthesis not matched");
+        }
+        return unescapeCSS(selector.slice(start, selectorIndex - 1));
     }
     function isEscaped(pos) {
         var slashCount = 0;
-        while (selector.charAt(--pos) === "\\")
+        while (selector.charCodeAt(--pos) === 92 /* BackSlash */)
             slashCount++;
         return (slashCount & 1) === 1;
     }
@@ -5088,104 +5186,144 @@ function parseSelector(subselects, selector, options, selectorIndex) {
             throw new Error("Did not expect successive traversals.");
         }
     }
+    function addTraversal(type) {
+        if (tokens.length > 0 &&
+            tokens[tokens.length - 1].type === types_1.SelectorType.Descendant) {
+            tokens[tokens.length - 1].type = type;
+            return;
+        }
+        ensureNotTraversal();
+        tokens.push({ type: type });
+    }
+    function addSpecialAttribute(name, action) {
+        tokens.push({
+            type: types_1.SelectorType.Attribute,
+            name: name,
+            action: action,
+            value: getName(1),
+            namespace: null,
+            ignoreCase: "quirks",
+        });
+    }
+    /**
+     * We have finished parsing the current part of the selector.
+     *
+     * Remove descendant tokens at the end if they exist,
+     * and return the last index, so that parsing can be
+     * picked up from here.
+     */
+    function finalizeSubselector() {
+        if (tokens.length &&
+            tokens[tokens.length - 1].type === types_1.SelectorType.Descendant) {
+            tokens.pop();
+        }
+        if (tokens.length === 0) {
+            throw new Error("Empty sub-selector");
+        }
+        subselects.push(tokens);
+    }
     stripWhitespace(0);
-    while (selector !== "") {
-        var firstChar = selector.charAt(selectorIndex);
-        if (isWhitespace(firstChar)) {
-            sawWS = true;
-            stripWhitespace(1);
-        }
-        else if (firstChar in Traversals) {
-            ensureNotTraversal();
-            tokens.push({ type: Traversals[firstChar] });
-            sawWS = false;
-            stripWhitespace(1);
-        }
-        else if (firstChar === ",") {
-            if (tokens.length === 0) {
-                throw new Error("Empty sub-selector");
+    if (selector.length === selectorIndex) {
+        return selectorIndex;
+    }
+    loop: while (selectorIndex < selector.length) {
+        var firstChar = selector.charCodeAt(selectorIndex);
+        switch (firstChar) {
+            // Whitespace
+            case 32 /* Space */:
+            case 9 /* Tab */:
+            case 10 /* NewLine */:
+            case 12 /* FormFeed */:
+            case 13 /* CarriageReturn */: {
+                if (tokens.length === 0 ||
+                    tokens[0].type !== types_1.SelectorType.Descendant) {
+                    ensureNotTraversal();
+                    tokens.push({ type: types_1.SelectorType.Descendant });
+                }
+                stripWhitespace(1);
+                break;
             }
-            subselects.push(tokens);
-            tokens = [];
-            sawWS = false;
-            stripWhitespace(1);
-        }
-        else if (selector.startsWith("/*", selectorIndex)) {
-            var endIndex = selector.indexOf("*/", selectorIndex + 2);
-            if (endIndex < 0) {
-                throw new Error("Comment was not terminated");
+            // Traversals
+            case 62 /* GreaterThan */: {
+                addTraversal(types_1.SelectorType.Child);
+                stripWhitespace(1);
+                break;
             }
-            selectorIndex = endIndex + 2;
-        }
-        else {
-            if (sawWS) {
-                ensureNotTraversal();
-                tokens.push({ type: "descendant" });
-                sawWS = false;
+            case 60 /* LessThan */: {
+                addTraversal(types_1.SelectorType.Parent);
+                stripWhitespace(1);
+                break;
             }
-            if (firstChar in attribSelectors) {
-                var _c = attribSelectors[firstChar], name_1 = _c[0], action = _c[1];
-                tokens.push({
-                    type: "attribute",
-                    name: name_1,
-                    action: action,
-                    value: getName(1),
-                    namespace: null,
-                    // TODO: Add quirksMode option, which makes `ignoreCase` `true` for HTML.
-                    ignoreCase: options.xmlMode ? null : false,
-                });
+            case 126 /* Tilde */: {
+                addTraversal(types_1.SelectorType.Sibling);
+                stripWhitespace(1);
+                break;
             }
-            else if (firstChar === "[") {
+            case 43 /* Plus */: {
+                addTraversal(types_1.SelectorType.Adjacent);
+                stripWhitespace(1);
+                break;
+            }
+            // Special attribute selectors: .class, #id
+            case 46 /* Period */: {
+                addSpecialAttribute("class", types_1.AttributeAction.Element);
+                break;
+            }
+            case 35 /* Hash */: {
+                addSpecialAttribute("id", types_1.AttributeAction.Equals);
+                break;
+            }
+            case 91 /* LeftSquareBracket */: {
                 stripWhitespace(1);
                 // Determine attribute name and namespace
-                var name_2 = void 0;
+                var name_1 = void 0;
                 var namespace = null;
-                if (selector.charAt(selectorIndex) === "|") {
-                    namespace = "";
-                    selectorIndex += 1;
+                if (selector.charCodeAt(selectorIndex) === 124 /* Pipe */) {
+                    // Equivalent to no namespace
+                    name_1 = getName(1);
                 }
-                if (selector.startsWith("*|", selectorIndex)) {
+                else if (selector.startsWith("*|", selectorIndex)) {
                     namespace = "*";
-                    selectorIndex += 2;
+                    name_1 = getName(2);
                 }
-                name_2 = getName(0);
-                if (namespace === null &&
-                    selector.charAt(selectorIndex) === "|" &&
-                    selector.charAt(selectorIndex + 1) !== "=") {
-                    namespace = name_2;
-                    name_2 = getName(1);
-                }
-                if ((_a = options.lowerCaseAttributeNames) !== null && _a !== void 0 ? _a : !options.xmlMode) {
-                    name_2 = name_2.toLowerCase();
+                else {
+                    name_1 = getName(0);
+                    if (selector.charCodeAt(selectorIndex) === 124 /* Pipe */ &&
+                        selector.charCodeAt(selectorIndex + 1) !==
+                            61 /* Equal */) {
+                        namespace = name_1;
+                        name_1 = getName(1);
+                    }
                 }
                 stripWhitespace(0);
                 // Determine comparison operation
-                var action = "exists";
-                var possibleAction = actionTypes.get(selector.charAt(selectorIndex));
+                var action = types_1.AttributeAction.Exists;
+                var possibleAction = actionTypes.get(selector.charCodeAt(selectorIndex));
                 if (possibleAction) {
                     action = possibleAction;
-                    if (selector.charAt(selectorIndex + 1) !== "=") {
+                    if (selector.charCodeAt(selectorIndex + 1) !==
+                        61 /* Equal */) {
                         throw new Error("Expected `=`");
                     }
                     stripWhitespace(2);
                 }
-                else if (selector.charAt(selectorIndex) === "=") {
-                    action = "equals";
+                else if (selector.charCodeAt(selectorIndex) === 61 /* Equal */) {
+                    action = types_1.AttributeAction.Equals;
                     stripWhitespace(1);
                 }
                 // Determine value
                 var value = "";
                 var ignoreCase = null;
                 if (action !== "exists") {
-                    if (quotes.has(selector.charAt(selectorIndex))) {
-                        var quote = selector.charAt(selectorIndex);
+                    if (isQuote(selector.charCodeAt(selectorIndex))) {
+                        var quote = selector.charCodeAt(selectorIndex);
                         var sectionEnd = selectorIndex + 1;
                         while (sectionEnd < selector.length &&
-                            (selector.charAt(sectionEnd) !== quote ||
+                            (selector.charCodeAt(sectionEnd) !== quote ||
                                 isEscaped(sectionEnd))) {
                             sectionEnd += 1;
                         }
-                        if (selector.charAt(sectionEnd) !== quote) {
+                        if (selector.charCodeAt(sectionEnd) !== quote) {
                             throw new Error("Attribute value didn't end");
                         }
                         value = unescapeCSS(selector.slice(selectorIndex + 1, sectionEnd));
@@ -5194,8 +5332,9 @@ function parseSelector(subselects, selector, options, selectorIndex) {
                     else {
                         var valueStart = selectorIndex;
                         while (selectorIndex < selector.length &&
-                            ((!isWhitespace(selector.charAt(selectorIndex)) &&
-                                selector.charAt(selectorIndex) !== "]") ||
+                            ((!isWhitespace(selector.charCodeAt(selectorIndex)) &&
+                                selector.charCodeAt(selectorIndex) !==
+                                    93 /* RightSquareBracket */) ||
                                 isEscaped(selectorIndex))) {
                             selectorIndex += 1;
                         }
@@ -5203,255 +5342,332 @@ function parseSelector(subselects, selector, options, selectorIndex) {
                     }
                     stripWhitespace(0);
                     // See if we have a force ignore flag
-                    var forceIgnore = selector.charAt(selectorIndex);
+                    var forceIgnore = selector.charCodeAt(selectorIndex) | 0x20;
                     // If the forceIgnore flag is set (either `i` or `s`), use that value
-                    if (forceIgnore === "s" || forceIgnore === "S") {
+                    if (forceIgnore === 115 /* LowerS */) {
                         ignoreCase = false;
                         stripWhitespace(1);
                     }
-                    else if (forceIgnore === "i" || forceIgnore === "I") {
+                    else if (forceIgnore === 105 /* LowerI */) {
                         ignoreCase = true;
                         stripWhitespace(1);
                     }
                 }
-                // If `xmlMode` is set, there are no rules; otherwise, use the `caseInsensitiveAttributes` list.
-                if (!options.xmlMode) {
-                    // TODO: Skip this for `exists`, as there is no value to compare to.
-                    ignoreCase !== null && ignoreCase !== void 0 ? ignoreCase : (ignoreCase = caseInsensitiveAttributes.has(name_2));
-                }
-                if (selector.charAt(selectorIndex) !== "]") {
+                if (selector.charCodeAt(selectorIndex) !==
+                    93 /* RightSquareBracket */) {
                     throw new Error("Attribute selector didn't terminate");
                 }
                 selectorIndex += 1;
                 var attributeSelector = {
-                    type: "attribute",
-                    name: name_2,
+                    type: types_1.SelectorType.Attribute,
+                    name: name_1,
                     action: action,
                     value: value,
                     namespace: namespace,
                     ignoreCase: ignoreCase,
                 };
                 tokens.push(attributeSelector);
+                break;
             }
-            else if (firstChar === ":") {
-                if (selector.charAt(selectorIndex + 1) === ":") {
+            case 58 /* Colon */: {
+                if (selector.charCodeAt(selectorIndex + 1) === 58 /* Colon */) {
                     tokens.push({
-                        type: "pseudo-element",
+                        type: types_1.SelectorType.PseudoElement,
                         name: getName(2).toLowerCase(),
+                        data: selector.charCodeAt(selectorIndex) ===
+                            40 /* LeftParenthesis */
+                            ? readValueWithParenthesis()
+                            : null,
                     });
                     continue;
                 }
-                var name_3 = getName(1).toLowerCase();
+                var name_2 = getName(1).toLowerCase();
                 var data = null;
-                if (selector.charAt(selectorIndex) === "(") {
-                    if (unpackPseudos.has(name_3)) {
-                        if (quotes.has(selector.charAt(selectorIndex + 1))) {
-                            throw new Error("Pseudo-selector " + name_3 + " cannot be quoted");
+                if (selector.charCodeAt(selectorIndex) ===
+                    40 /* LeftParenthesis */) {
+                    if (unpackPseudos.has(name_2)) {
+                        if (isQuote(selector.charCodeAt(selectorIndex + 1))) {
+                            throw new Error("Pseudo-selector ".concat(name_2, " cannot be quoted"));
                         }
                         data = [];
-                        selectorIndex = parseSelector(data, selector, options, selectorIndex + 1);
-                        if (selector.charAt(selectorIndex) !== ")") {
-                            throw new Error("Missing closing parenthesis in :" + name_3 + " (" + selector + ")");
+                        selectorIndex = parseSelector(data, selector, selectorIndex + 1);
+                        if (selector.charCodeAt(selectorIndex) !==
+                            41 /* RightParenthesis */) {
+                            throw new Error("Missing closing parenthesis in :".concat(name_2, " (").concat(selector, ")"));
                         }
                         selectorIndex += 1;
                     }
                     else {
-                        selectorIndex += 1;
-                        var start = selectorIndex;
-                        var counter = 1;
-                        for (; counter > 0 && selectorIndex < selector.length; selectorIndex++) {
-                            if (selector.charAt(selectorIndex) === "(" &&
-                                !isEscaped(selectorIndex)) {
-                                counter++;
-                            }
-                            else if (selector.charAt(selectorIndex) === ")" &&
-                                !isEscaped(selectorIndex)) {
-                                counter--;
-                            }
-                        }
-                        if (counter) {
-                            throw new Error("Parenthesis not matched");
-                        }
-                        data = selector.slice(start, selectorIndex - 1);
-                        if (stripQuotesFromPseudos.has(name_3)) {
-                            var quot = data.charAt(0);
-                            if (quot === data.slice(-1) && quotes.has(quot)) {
+                        data = readValueWithParenthesis();
+                        if (stripQuotesFromPseudos.has(name_2)) {
+                            var quot = data.charCodeAt(0);
+                            if (quot === data.charCodeAt(data.length - 1) &&
+                                isQuote(quot)) {
                                 data = data.slice(1, -1);
                             }
-                            data = unescapeCSS(data);
                         }
+                        data = unescapeCSS(data);
                     }
                 }
-                tokens.push({ type: "pseudo", name: name_3, data: data });
+                tokens.push({ type: types_1.SelectorType.Pseudo, name: name_2, data: data });
+                break;
             }
-            else {
+            case 44 /* Comma */: {
+                finalizeSubselector();
+                tokens = [];
+                stripWhitespace(1);
+                break;
+            }
+            default: {
+                if (selector.startsWith("/*", selectorIndex)) {
+                    var endIndex = selector.indexOf("*/", selectorIndex + 2);
+                    if (endIndex < 0) {
+                        throw new Error("Comment was not terminated");
+                    }
+                    selectorIndex = endIndex + 2;
+                    // Remove leading whitespace
+                    if (tokens.length === 0) {
+                        stripWhitespace(0);
+                    }
+                    break;
+                }
                 var namespace = null;
-                var name_4 = void 0;
-                if (firstChar === "*") {
+                var name_3 = void 0;
+                if (firstChar === 42 /* Asterisk */) {
                     selectorIndex += 1;
-                    name_4 = "*";
+                    name_3 = "*";
+                }
+                else if (firstChar === 124 /* Pipe */) {
+                    name_3 = "";
+                    if (selector.charCodeAt(selectorIndex + 1) === 124 /* Pipe */) {
+                        addTraversal(types_1.SelectorType.ColumnCombinator);
+                        stripWhitespace(2);
+                        break;
+                    }
                 }
                 else if (reName.test(selector.slice(selectorIndex))) {
-                    if (selector.charAt(selectorIndex) === "|") {
-                        namespace = "";
-                        selectorIndex += 1;
-                    }
-                    name_4 = getName(0);
+                    name_3 = getName(0);
                 }
                 else {
-                    /*
-                     * We have finished parsing the selector.
-                     * Remove descendant tokens at the end if they exist,
-                     * and return the last index, so that parsing can be
-                     * picked up from here.
-                     */
-                    if (tokens.length &&
-                        tokens[tokens.length - 1].type === "descendant") {
-                        tokens.pop();
-                    }
-                    addToken(subselects, tokens);
-                    return selectorIndex;
+                    break loop;
                 }
-                if (selector.charAt(selectorIndex) === "|") {
-                    namespace = name_4;
-                    if (selector.charAt(selectorIndex + 1) === "*") {
-                        name_4 = "*";
+                if (selector.charCodeAt(selectorIndex) === 124 /* Pipe */ &&
+                    selector.charCodeAt(selectorIndex + 1) !== 124 /* Pipe */) {
+                    namespace = name_3;
+                    if (selector.charCodeAt(selectorIndex + 1) ===
+                        42 /* Asterisk */) {
+                        name_3 = "*";
                         selectorIndex += 2;
                     }
                     else {
-                        name_4 = getName(1);
+                        name_3 = getName(1);
                     }
                 }
-                if (name_4 === "*") {
-                    tokens.push({ type: "universal", namespace: namespace });
-                }
-                else {
-                    if ((_b = options.lowerCaseTags) !== null && _b !== void 0 ? _b : !options.xmlMode) {
-                        name_4 = name_4.toLowerCase();
-                    }
-                    tokens.push({ type: "tag", name: name_4, namespace: namespace });
-                }
+                tokens.push(name_3 === "*"
+                    ? { type: types_1.SelectorType.Universal, namespace: namespace }
+                    : { type: types_1.SelectorType.Tag, name: name_3, namespace: namespace });
             }
         }
     }
-    addToken(subselects, tokens);
+    finalizeSubselector();
     return selectorIndex;
-}
-function addToken(subselects, tokens) {
-    if (subselects.length > 0 && tokens.length === 0) {
-        throw new Error("Empty sub-selector");
-    }
-    subselects.push(tokens);
 }
 
 
 /***/ }),
 
-/***/ 586:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ 9265:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
-var __spreadArray = (this && this.__spreadArray) || function (to, from) {
-    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
-        to[j] = from[i];
-    return to;
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-var actionTypes = {
-    equals: "",
-    element: "~",
-    start: "^",
-    end: "$",
-    any: "*",
-    not: "!",
-    hyphen: "|",
-};
-var charsToEscape = new Set(__spreadArray(__spreadArray([], Object.keys(actionTypes)
-    .map(function (typeKey) { return actionTypes[typeKey]; })
-    .filter(Boolean)), [
+exports.stringify = void 0;
+var types_1 = __nccwpck_require__(8752);
+var attribValChars = ["\\", '"'];
+var pseudoValChars = __spreadArray(__spreadArray([], attribValChars, true), ["(", ")"], false);
+var charsToEscapeInAttributeValue = new Set(attribValChars.map(function (c) { return c.charCodeAt(0); }));
+var charsToEscapeInPseudoValue = new Set(pseudoValChars.map(function (c) { return c.charCodeAt(0); }));
+var charsToEscapeInName = new Set(__spreadArray(__spreadArray([], pseudoValChars, true), [
+    "~",
+    "^",
+    "$",
+    "*",
+    "+",
+    "!",
+    "|",
     ":",
     "[",
     "]",
     " ",
-    "\\",
-    "(",
-    ")",
-    "'",
-]));
+    ".",
+], false).map(function (c) { return c.charCodeAt(0); }));
 /**
  * Turns `selector` back into a string.
  *
  * @param selector Selector to stringify.
  */
 function stringify(selector) {
-    return selector.map(stringifySubselector).join(", ");
+    return selector
+        .map(function (token) { return token.map(stringifyToken).join(""); })
+        .join(", ");
 }
-exports.default = stringify;
-function stringifySubselector(token) {
-    return token.map(stringifyToken).join("");
-}
-function stringifyToken(token) {
+exports.stringify = stringify;
+function stringifyToken(token, index, arr) {
     switch (token.type) {
         // Simple types
-        case "child":
-            return " > ";
-        case "parent":
-            return " < ";
-        case "sibling":
-            return " ~ ";
-        case "adjacent":
-            return " + ";
-        case "descendant":
+        case types_1.SelectorType.Child:
+            return index === 0 ? "> " : " > ";
+        case types_1.SelectorType.Parent:
+            return index === 0 ? "< " : " < ";
+        case types_1.SelectorType.Sibling:
+            return index === 0 ? "~ " : " ~ ";
+        case types_1.SelectorType.Adjacent:
+            return index === 0 ? "+ " : " + ";
+        case types_1.SelectorType.Descendant:
             return " ";
-        case "universal":
-            return getNamespace(token.namespace) + "*";
-        case "tag":
+        case types_1.SelectorType.ColumnCombinator:
+            return index === 0 ? "|| " : " || ";
+        case types_1.SelectorType.Universal:
+            // Return an empty string if the selector isn't needed.
+            return token.namespace === "*" &&
+                index + 1 < arr.length &&
+                "name" in arr[index + 1]
+                ? ""
+                : "".concat(getNamespace(token.namespace), "*");
+        case types_1.SelectorType.Tag:
             return getNamespacedName(token);
-        case "pseudo-element":
-            return "::" + escapeName(token.name);
-        case "pseudo":
-            if (token.data === null)
-                return ":" + escapeName(token.name);
-            if (typeof token.data === "string") {
-                return ":" + escapeName(token.name) + "(" + escapeName(token.data) + ")";
-            }
-            return ":" + escapeName(token.name) + "(" + stringify(token.data) + ")";
-        case "attribute": {
+        case types_1.SelectorType.PseudoElement:
+            return "::".concat(escapeName(token.name, charsToEscapeInName)).concat(token.data === null
+                ? ""
+                : "(".concat(escapeName(token.data, charsToEscapeInPseudoValue), ")"));
+        case types_1.SelectorType.Pseudo:
+            return ":".concat(escapeName(token.name, charsToEscapeInName)).concat(token.data === null
+                ? ""
+                : "(".concat(typeof token.data === "string"
+                    ? escapeName(token.data, charsToEscapeInPseudoValue)
+                    : stringify(token.data), ")"));
+        case types_1.SelectorType.Attribute: {
             if (token.name === "id" &&
-                token.action === "equals" &&
-                !token.ignoreCase &&
+                token.action === types_1.AttributeAction.Equals &&
+                token.ignoreCase === "quirks" &&
                 !token.namespace) {
-                return "#" + escapeName(token.value);
+                return "#".concat(escapeName(token.value, charsToEscapeInName));
             }
             if (token.name === "class" &&
-                token.action === "element" &&
-                !token.ignoreCase &&
+                token.action === types_1.AttributeAction.Element &&
+                token.ignoreCase === "quirks" &&
                 !token.namespace) {
-                return "." + escapeName(token.value);
+                return ".".concat(escapeName(token.value, charsToEscapeInName));
             }
             var name_1 = getNamespacedName(token);
-            if (token.action === "exists") {
-                return "[" + name_1 + "]";
+            if (token.action === types_1.AttributeAction.Exists) {
+                return "[".concat(name_1, "]");
             }
-            return "[" + name_1 + actionTypes[token.action] + "='" + escapeName(token.value) + "'" + (token.ignoreCase ? "i" : token.ignoreCase === false ? "s" : "") + "]";
+            return "[".concat(name_1).concat(getActionValue(token.action), "=\"").concat(escapeName(token.value, charsToEscapeInAttributeValue), "\"").concat(token.ignoreCase === null ? "" : token.ignoreCase ? " i" : " s", "]");
         }
     }
 }
+function getActionValue(action) {
+    switch (action) {
+        case types_1.AttributeAction.Equals:
+            return "";
+        case types_1.AttributeAction.Element:
+            return "~";
+        case types_1.AttributeAction.Start:
+            return "^";
+        case types_1.AttributeAction.End:
+            return "$";
+        case types_1.AttributeAction.Any:
+            return "*";
+        case types_1.AttributeAction.Not:
+            return "!";
+        case types_1.AttributeAction.Hyphen:
+            return "|";
+        case types_1.AttributeAction.Exists:
+            throw new Error("Shouldn't be here");
+    }
+}
 function getNamespacedName(token) {
-    return "" + getNamespace(token.namespace) + escapeName(token.name);
+    return "".concat(getNamespace(token.namespace)).concat(escapeName(token.name, charsToEscapeInName));
 }
 function getNamespace(namespace) {
     return namespace !== null
-        ? (namespace === "*" ? "*" : escapeName(namespace)) + "|"
+        ? "".concat(namespace === "*"
+            ? "*"
+            : escapeName(namespace, charsToEscapeInName), "|")
         : "";
 }
-function escapeName(str) {
-    return str
-        .split("")
-        .map(function (c) { return (charsToEscape.has(c) ? "\\" + c : c); })
-        .join("");
+function escapeName(str, charsToEscape) {
+    var lastIdx = 0;
+    var ret = "";
+    for (var i = 0; i < str.length; i++) {
+        if (charsToEscape.has(str.charCodeAt(i))) {
+            ret += "".concat(str.slice(lastIdx, i), "\\").concat(str.charAt(i));
+            lastIdx = i + 1;
+        }
+    }
+    return ret.length > 0 ? ret + str.slice(lastIdx) : str;
 }
+
+
+/***/ }),
+
+/***/ 8752:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttributeAction = exports.IgnoreCaseMode = exports.SelectorType = void 0;
+var SelectorType;
+(function (SelectorType) {
+    SelectorType["Attribute"] = "attribute";
+    SelectorType["Pseudo"] = "pseudo";
+    SelectorType["PseudoElement"] = "pseudo-element";
+    SelectorType["Tag"] = "tag";
+    SelectorType["Universal"] = "universal";
+    // Traversals
+    SelectorType["Adjacent"] = "adjacent";
+    SelectorType["Child"] = "child";
+    SelectorType["Descendant"] = "descendant";
+    SelectorType["Parent"] = "parent";
+    SelectorType["Sibling"] = "sibling";
+    SelectorType["ColumnCombinator"] = "column-combinator";
+})(SelectorType = exports.SelectorType || (exports.SelectorType = {}));
+/**
+ * Modes for ignore case.
+ *
+ * This could be updated to an enum, and the object is
+ * the current stand-in that will allow code to be updated
+ * without big changes.
+ */
+exports.IgnoreCaseMode = {
+    Unknown: null,
+    QuirksMode: "quirks",
+    IgnoreCase: true,
+    CaseSensitive: false,
+};
+var AttributeAction;
+(function (AttributeAction) {
+    AttributeAction["Any"] = "any";
+    AttributeAction["Element"] = "element";
+    AttributeAction["End"] = "end";
+    AttributeAction["Equals"] = "equals";
+    AttributeAction["Exists"] = "exists";
+    AttributeAction["Hyphen"] = "hyphen";
+    AttributeAction["Not"] = "not";
+    AttributeAction["Start"] = "start";
+})(AttributeAction = exports.AttributeAction || (exports.AttributeAction = {}));
 
 
 /***/ }),
@@ -5856,7 +6072,11 @@ exports.Doctype = ElementType.Doctype;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -5875,6 +6095,7 @@ var defaultOpts = {
     normalizeWhitespace: false,
     withStartIndices: false,
     withEndIndices: false,
+    xmlMode: false,
 };
 var DomHandler = /** @class */ (function () {
     /**
@@ -5913,13 +6134,12 @@ var DomHandler = /** @class */ (function () {
     };
     // Resets the handler back to starting state
     DomHandler.prototype.onreset = function () {
-        var _a;
         this.dom = [];
         this.root = new node_1.Document(this.dom);
         this.done = false;
         this.tagStack = [this.root];
         this.lastNode = null;
-        this.parser = (_a = this.parser) !== null && _a !== void 0 ? _a : null;
+        this.parser = null;
     };
     // Signals the handler that parsing is done
     DomHandler.prototype.onend = function () {
@@ -5956,6 +6176,9 @@ var DomHandler = /** @class */ (function () {
             }
             else {
                 lastNode.data += data;
+            }
+            if (this.options.withEndIndices) {
+                lastNode.endIndex = this.parser.endIndex;
             }
         }
         else {
@@ -6094,6 +6317,10 @@ var Node = /** @class */ (function () {
     }
     Object.defineProperty(Node.prototype, "nodeType", {
         // Read-only aliases
+        /**
+         * [DOM spec](https://dom.spec.whatwg.org/#dom-node-nodetype)-compatible
+         * node {@link type}.
+         */
         get: function () {
             var _a;
             return (_a = nodeTypes.get(this.type)) !== null && _a !== void 0 ? _a : 1;
@@ -6103,6 +6330,10 @@ var Node = /** @class */ (function () {
     });
     Object.defineProperty(Node.prototype, "parentNode", {
         // Read-write aliases for properties
+        /**
+         * Same as {@link parent}.
+         * [DOM spec](https://dom.spec.whatwg.org)-compatible alias.
+         */
         get: function () {
             return this.parent;
         },
@@ -6113,6 +6344,10 @@ var Node = /** @class */ (function () {
         configurable: true
     });
     Object.defineProperty(Node.prototype, "previousSibling", {
+        /**
+         * Same as {@link prev}.
+         * [DOM spec](https://dom.spec.whatwg.org)-compatible alias.
+         */
         get: function () {
             return this.prev;
         },
@@ -6123,6 +6358,10 @@ var Node = /** @class */ (function () {
         configurable: true
     });
     Object.defineProperty(Node.prototype, "nextSibling", {
+        /**
+         * Same as {@link next}.
+         * [DOM spec](https://dom.spec.whatwg.org)-compatible alias.
+         */
         get: function () {
             return this.next;
         },
@@ -6145,6 +6384,9 @@ var Node = /** @class */ (function () {
     return Node;
 }());
 exports.Node = Node;
+/**
+ * A node that contains some data.
+ */
 var DataNode = /** @class */ (function (_super) {
     __extends(DataNode, _super);
     /**
@@ -6157,6 +6399,10 @@ var DataNode = /** @class */ (function (_super) {
         return _this;
     }
     Object.defineProperty(DataNode.prototype, "nodeValue", {
+        /**
+         * Same as {@link data}.
+         * [DOM spec](https://dom.spec.whatwg.org)-compatible alias.
+         */
         get: function () {
             return this.data;
         },
@@ -6169,6 +6415,9 @@ var DataNode = /** @class */ (function (_super) {
     return DataNode;
 }(Node));
 exports.DataNode = DataNode;
+/**
+ * Text within the document.
+ */
 var Text = /** @class */ (function (_super) {
     __extends(Text, _super);
     function Text(data) {
@@ -6177,6 +6426,9 @@ var Text = /** @class */ (function (_super) {
     return Text;
 }(DataNode));
 exports.Text = Text;
+/**
+ * Comments within the document.
+ */
 var Comment = /** @class */ (function (_super) {
     __extends(Comment, _super);
     function Comment(data) {
@@ -6185,6 +6437,9 @@ var Comment = /** @class */ (function (_super) {
     return Comment;
 }(DataNode));
 exports.Comment = Comment;
+/**
+ * Processing instructions, including doc types.
+ */
 var ProcessingInstruction = /** @class */ (function (_super) {
     __extends(ProcessingInstruction, _super);
     function ProcessingInstruction(name, data) {
@@ -6211,6 +6466,7 @@ var NodeWithChildren = /** @class */ (function (_super) {
     }
     Object.defineProperty(NodeWithChildren.prototype, "firstChild", {
         // Aliases
+        /** First child of the node. */
         get: function () {
             var _a;
             return (_a = this.children[0]) !== null && _a !== void 0 ? _a : null;
@@ -6219,6 +6475,7 @@ var NodeWithChildren = /** @class */ (function (_super) {
         configurable: true
     });
     Object.defineProperty(NodeWithChildren.prototype, "lastChild", {
+        /** Last child of the node. */
         get: function () {
             return this.children.length > 0
                 ? this.children[this.children.length - 1]
@@ -6228,6 +6485,10 @@ var NodeWithChildren = /** @class */ (function (_super) {
         configurable: true
     });
     Object.defineProperty(NodeWithChildren.prototype, "childNodes", {
+        /**
+         * Same as {@link children}.
+         * [DOM spec](https://dom.spec.whatwg.org)-compatible alias.
+         */
         get: function () {
             return this.children;
         },
@@ -6240,6 +6501,9 @@ var NodeWithChildren = /** @class */ (function (_super) {
     return NodeWithChildren;
 }(Node));
 exports.NodeWithChildren = NodeWithChildren;
+/**
+ * The root node of the document.
+ */
 var Document = /** @class */ (function (_super) {
     __extends(Document, _super);
     function Document(children) {
@@ -6248,6 +6512,9 @@ var Document = /** @class */ (function (_super) {
     return Document;
 }(NodeWithChildren));
 exports.Document = Document;
+/**
+ * An element within the DOM.
+ */
 var Element = /** @class */ (function (_super) {
     __extends(Element, _super);
     /**
@@ -6269,6 +6536,10 @@ var Element = /** @class */ (function (_super) {
     }
     Object.defineProperty(Element.prototype, "tagName", {
         // DOM Level 1 aliases
+        /**
+         * Same as {@link name}.
+         * [DOM spec](https://dom.spec.whatwg.org)-compatible alias.
+         */
         get: function () {
             return this.name;
         },
@@ -6302,7 +6573,7 @@ exports.Element = Element;
  * @returns `true` if the node is a `Element`, `false` otherwise.
  */
 function isTag(node) {
-    return domelementtype_1.isTag(node);
+    return (0, domelementtype_1.isTag)(node);
 }
 exports.isTag = isTag;
 /**
@@ -6372,6 +6643,9 @@ function cloneNode(node, recursive) {
         var children = recursive ? cloneChildren(node.children) : [];
         var clone_1 = new Element(node.name, __assign({}, node.attribs), children);
         children.forEach(function (child) { return (child.parent = clone_1); });
+        if (node.namespace != null) {
+            clone_1.namespace = node.namespace;
+        }
         if (node["x-attribsNamespace"]) {
             clone_1["x-attribsNamespace"] = __assign({}, node["x-attribsNamespace"]);
         }
@@ -6405,10 +6679,13 @@ function cloneNode(node, recursive) {
         result = instruction;
     }
     else {
-        throw new Error("Not implemented yet: " + node.type);
+        throw new Error("Not implemented yet: ".concat(node.type));
     }
     result.startIndex = node.startIndex;
     result.endIndex = node.endIndex;
+    if (node.sourceCodeLocation != null) {
+        result.sourceCodeLocation = node.sourceCodeLocation;
+    }
     return result;
 }
 exports.cloneNode = cloneNode;
@@ -6419,6 +6696,204 @@ function cloneChildren(childs) {
         children[i - 1].next = children[i];
     }
     return children;
+}
+
+
+/***/ }),
+
+/***/ 1503:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getFeed = void 0;
+var stringify_1 = __nccwpck_require__(9561);
+var legacy_1 = __nccwpck_require__(2185);
+/**
+ * Get the feed object from the root of a DOM tree.
+ *
+ * @param doc - The DOM to to extract the feed from.
+ * @returns The feed.
+ */
+function getFeed(doc) {
+    var feedRoot = getOneElement(isValidFeed, doc);
+    return !feedRoot
+        ? null
+        : feedRoot.name === "feed"
+            ? getAtomFeed(feedRoot)
+            : getRssFeed(feedRoot);
+}
+exports.getFeed = getFeed;
+/**
+ * Parse an Atom feed.
+ *
+ * @param feedRoot The root of the feed.
+ * @returns The parsed feed.
+ */
+function getAtomFeed(feedRoot) {
+    var _a;
+    var childs = feedRoot.children;
+    var feed = {
+        type: "atom",
+        items: (0, legacy_1.getElementsByTagName)("entry", childs).map(function (item) {
+            var _a;
+            var children = item.children;
+            var entry = { media: getMediaElements(children) };
+            addConditionally(entry, "id", "id", children);
+            addConditionally(entry, "title", "title", children);
+            var href = (_a = getOneElement("link", children)) === null || _a === void 0 ? void 0 : _a.attribs.href;
+            if (href) {
+                entry.link = href;
+            }
+            var description = fetch("summary", children) || fetch("content", children);
+            if (description) {
+                entry.description = description;
+            }
+            var pubDate = fetch("updated", children);
+            if (pubDate) {
+                entry.pubDate = new Date(pubDate);
+            }
+            return entry;
+        }),
+    };
+    addConditionally(feed, "id", "id", childs);
+    addConditionally(feed, "title", "title", childs);
+    var href = (_a = getOneElement("link", childs)) === null || _a === void 0 ? void 0 : _a.attribs.href;
+    if (href) {
+        feed.link = href;
+    }
+    addConditionally(feed, "description", "subtitle", childs);
+    var updated = fetch("updated", childs);
+    if (updated) {
+        feed.updated = new Date(updated);
+    }
+    addConditionally(feed, "author", "email", childs, true);
+    return feed;
+}
+/**
+ * Parse a RSS feed.
+ *
+ * @param feedRoot The root of the feed.
+ * @returns The parsed feed.
+ */
+function getRssFeed(feedRoot) {
+    var _a, _b;
+    var childs = (_b = (_a = getOneElement("channel", feedRoot.children)) === null || _a === void 0 ? void 0 : _a.children) !== null && _b !== void 0 ? _b : [];
+    var feed = {
+        type: feedRoot.name.substr(0, 3),
+        id: "",
+        items: (0, legacy_1.getElementsByTagName)("item", feedRoot.children).map(function (item) {
+            var children = item.children;
+            var entry = { media: getMediaElements(children) };
+            addConditionally(entry, "id", "guid", children);
+            addConditionally(entry, "title", "title", children);
+            addConditionally(entry, "link", "link", children);
+            addConditionally(entry, "description", "description", children);
+            var pubDate = fetch("pubDate", children);
+            if (pubDate)
+                entry.pubDate = new Date(pubDate);
+            return entry;
+        }),
+    };
+    addConditionally(feed, "title", "title", childs);
+    addConditionally(feed, "link", "link", childs);
+    addConditionally(feed, "description", "description", childs);
+    var updated = fetch("lastBuildDate", childs);
+    if (updated) {
+        feed.updated = new Date(updated);
+    }
+    addConditionally(feed, "author", "managingEditor", childs, true);
+    return feed;
+}
+var MEDIA_KEYS_STRING = ["url", "type", "lang"];
+var MEDIA_KEYS_INT = [
+    "fileSize",
+    "bitrate",
+    "framerate",
+    "samplingrate",
+    "channels",
+    "duration",
+    "height",
+    "width",
+];
+/**
+ * Get all media elements of a feed item.
+ *
+ * @param where Nodes to search in.
+ * @returns Media elements.
+ */
+function getMediaElements(where) {
+    return (0, legacy_1.getElementsByTagName)("media:content", where).map(function (elem) {
+        var attribs = elem.attribs;
+        var media = {
+            medium: attribs.medium,
+            isDefault: !!attribs.isDefault,
+        };
+        for (var _i = 0, MEDIA_KEYS_STRING_1 = MEDIA_KEYS_STRING; _i < MEDIA_KEYS_STRING_1.length; _i++) {
+            var attrib = MEDIA_KEYS_STRING_1[_i];
+            if (attribs[attrib]) {
+                media[attrib] = attribs[attrib];
+            }
+        }
+        for (var _a = 0, MEDIA_KEYS_INT_1 = MEDIA_KEYS_INT; _a < MEDIA_KEYS_INT_1.length; _a++) {
+            var attrib = MEDIA_KEYS_INT_1[_a];
+            if (attribs[attrib]) {
+                media[attrib] = parseInt(attribs[attrib], 10);
+            }
+        }
+        if (attribs.expression) {
+            media.expression =
+                attribs.expression;
+        }
+        return media;
+    });
+}
+/**
+ * Get one element by tag name.
+ *
+ * @param tagName Tag name to look for
+ * @param node Node to search in
+ * @returns The element or null
+ */
+function getOneElement(tagName, node) {
+    return (0, legacy_1.getElementsByTagName)(tagName, node, true, 1)[0];
+}
+/**
+ * Get the text content of an element with a certain tag name.
+ *
+ * @param tagName Tag name to look for.
+ * @param where  Node to search in.
+ * @param recurse Whether to recurse into child nodes.
+ * @returns The text content of the element.
+ */
+function fetch(tagName, where, recurse) {
+    if (recurse === void 0) { recurse = false; }
+    return (0, stringify_1.textContent)((0, legacy_1.getElementsByTagName)(tagName, where, recurse, 1)).trim();
+}
+/**
+ * Adds a property to an object if it has a value.
+ *
+ * @param obj Object to be extended
+ * @param prop Property name
+ * @param tagName Tag name that contains the conditionally added property
+ * @param where Element to search for the property
+ * @param recurse Whether to recurse into child nodes.
+ */
+function addConditionally(obj, prop, tagName, where, recurse) {
+    if (recurse === void 0) { recurse = false; }
+    var val = fetch(tagName, where, recurse);
+    if (val)
+        obj[prop] = val;
+}
+/**
+ * Checks if an element is a feed root node.
+ *
+ * @param value The name of the element to check.
+ * @returns Whether an element is a feed root node.
+ */
+function isValidFeed(value) {
+    return value === "rss" || value === "feed" || value === "rdf:RDF";
 }
 
 
@@ -6496,12 +6971,12 @@ function compareDocumentPosition(nodeA, nodeB) {
     if (nodeA === nodeB) {
         return 0;
     }
-    var current = domhandler_1.hasChildren(nodeA) ? nodeA : nodeA.parent;
+    var current = (0, domhandler_1.hasChildren)(nodeA) ? nodeA : nodeA.parent;
     while (current) {
         aParents.unshift(current);
         current = current.parent;
     }
-    current = domhandler_1.hasChildren(nodeB) ? nodeB : nodeB.parent;
+    current = (0, domhandler_1.hasChildren)(nodeB) ? nodeB : nodeB.parent;
     while (current) {
         bParents.unshift(current);
         current = current.parent;
@@ -6580,6 +7055,8 @@ __exportStar(__nccwpck_require__(177), exports);
 __exportStar(__nccwpck_require__(9908), exports);
 __exportStar(__nccwpck_require__(2185), exports);
 __exportStar(__nccwpck_require__(1447), exports);
+__exportStar(__nccwpck_require__(1503), exports);
+/** @deprecated Use these methods from `domhandler` directly. */
 var domhandler_1 = __nccwpck_require__(4038);
 Object.defineProperty(exports, "isTag", ({ enumerable: true, get: function () { return domhandler_1.isTag; } }));
 Object.defineProperty(exports, "isCDATA", ({ enumerable: true, get: function () { return domhandler_1.isCDATA; } }));
@@ -6603,12 +7080,12 @@ var querying_1 = __nccwpck_require__(9908);
 var Checks = {
     tag_name: function (name) {
         if (typeof name === "function") {
-            return function (elem) { return domhandler_1.isTag(elem) && name(elem.name); };
+            return function (elem) { return (0, domhandler_1.isTag)(elem) && name(elem.name); };
         }
         else if (name === "*") {
             return domhandler_1.isTag;
         }
-        return function (elem) { return domhandler_1.isTag(elem) && elem.name === name; };
+        return function (elem) { return (0, domhandler_1.isTag)(elem) && elem.name === name; };
     },
     tag_type: function (type) {
         if (typeof type === "function") {
@@ -6618,9 +7095,9 @@ var Checks = {
     },
     tag_contains: function (data) {
         if (typeof data === "function") {
-            return function (elem) { return domhandler_1.isText(elem) && data(elem.data); };
+            return function (elem) { return (0, domhandler_1.isText)(elem) && data(elem.data); };
         }
-        return function (elem) { return domhandler_1.isText(elem) && elem.data === data; };
+        return function (elem) { return (0, domhandler_1.isText)(elem) && elem.data === data; };
     },
 };
 /**
@@ -6630,9 +7107,9 @@ var Checks = {
  */
 function getAttribCheck(attrib, value) {
     if (typeof value === "function") {
-        return function (elem) { return domhandler_1.isTag(elem) && value(elem.attribs[attrib]); };
+        return function (elem) { return (0, domhandler_1.isTag)(elem) && value(elem.attribs[attrib]); };
     }
-    return function (elem) { return domhandler_1.isTag(elem) && elem.attribs[attrib] === value; };
+    return function (elem) { return (0, domhandler_1.isTag)(elem) && elem.attribs[attrib] === value; };
 }
 /**
  * @param a First function to combine.
@@ -6651,7 +7128,7 @@ function combineFuncs(a, b) {
 function compileTest(options) {
     var funcs = Object.keys(options).map(function (key) {
         var value = options[key];
-        return key in Checks
+        return Object.prototype.hasOwnProperty.call(Checks, key)
             ? Checks[key](value)
             : getAttribCheck(key, value);
     });
@@ -6677,7 +7154,7 @@ exports.testElement = testElement;
 function getElements(options, nodes, recurse, limit) {
     if (limit === void 0) { limit = Infinity; }
     var test = compileTest(options);
-    return test ? querying_1.filter(test, nodes, recurse, limit) : [];
+    return test ? (0, querying_1.filter)(test, nodes, recurse, limit) : [];
 }
 exports.getElements = getElements;
 /**
@@ -6690,7 +7167,7 @@ function getElementById(id, nodes, recurse) {
     if (recurse === void 0) { recurse = true; }
     if (!Array.isArray(nodes))
         nodes = [nodes];
-    return querying_1.findOne(getAttribCheck("id", id), nodes, recurse);
+    return (0, querying_1.findOne)(getAttribCheck("id", id), nodes, recurse);
 }
 exports.getElementById = getElementById;
 /**
@@ -6703,7 +7180,7 @@ exports.getElementById = getElementById;
 function getElementsByTagName(tagName, nodes, recurse, limit) {
     if (recurse === void 0) { recurse = true; }
     if (limit === void 0) { limit = Infinity; }
-    return querying_1.filter(Checks.tag_name(tagName), nodes, recurse, limit);
+    return (0, querying_1.filter)(Checks.tag_name(tagName), nodes, recurse, limit);
 }
 exports.getElementsByTagName = getElementsByTagName;
 /**
@@ -6716,7 +7193,7 @@ exports.getElementsByTagName = getElementsByTagName;
 function getElementsByTagType(type, nodes, recurse, limit) {
     if (recurse === void 0) { recurse = true; }
     if (limit === void 0) { limit = Infinity; }
-    return querying_1.filter(Checks.tag_type(type), nodes, recurse, limit);
+    return (0, querying_1.filter)(Checks.tag_type(type), nodes, recurse, limit);
 }
 exports.getElementsByTagType = getElementsByTagType;
 
@@ -6903,7 +7380,7 @@ function find(test, nodes, recurse, limit) {
             if (--limit <= 0)
                 break;
         }
-        if (recurse && domhandler_1.hasChildren(elem) && elem.children.length > 0) {
+        if (recurse && (0, domhandler_1.hasChildren)(elem) && elem.children.length > 0) {
             var children = find(test, elem.children, recurse, limit);
             result.push.apply(result, children);
             limit -= children.length;
@@ -6938,7 +7415,7 @@ function findOne(test, nodes, recurse) {
     var elem = null;
     for (var i = 0; i < nodes.length && !elem; i++) {
         var checked = nodes[i];
-        if (!domhandler_1.isTag(checked)) {
+        if (!(0, domhandler_1.isTag)(checked)) {
             continue;
         }
         else if (test(checked)) {
@@ -6958,7 +7435,7 @@ exports.findOne = findOne;
  */
 function existsOne(test, nodes) {
     return nodes.some(function (checked) {
-        return domhandler_1.isTag(checked) &&
+        return (0, domhandler_1.isTag)(checked) &&
             (test(checked) ||
                 (checked.children.length > 0 &&
                     existsOne(test, checked.children)));
@@ -7014,7 +7491,7 @@ var domelementtype_1 = __nccwpck_require__(3944);
  * @returns `node`'s outer HTML.
  */
 function getOuterHTML(node, options) {
-    return dom_serializer_1.default(node, options);
+    return (0, dom_serializer_1.default)(node, options);
 }
 exports.getOuterHTML = getOuterHTML;
 /**
@@ -7024,7 +7501,7 @@ exports.getOuterHTML = getOuterHTML;
  * @returns `node`'s inner HTML.
  */
 function getInnerHTML(node, options) {
-    return domhandler_1.hasChildren(node)
+    return (0, domhandler_1.hasChildren)(node)
         ? node.children.map(function (node) { return getOuterHTML(node, options); }).join("")
         : "";
 }
@@ -7039,11 +7516,11 @@ exports.getInnerHTML = getInnerHTML;
 function getText(node) {
     if (Array.isArray(node))
         return node.map(getText).join("");
-    if (domhandler_1.isTag(node))
+    if ((0, domhandler_1.isTag)(node))
         return node.name === "br" ? "\n" : getText(node.children);
-    if (domhandler_1.isCDATA(node))
+    if ((0, domhandler_1.isCDATA)(node))
         return getText(node.children);
-    if (domhandler_1.isText(node))
+    if ((0, domhandler_1.isText)(node))
         return node.data;
     return "";
 }
@@ -7058,11 +7535,10 @@ exports.getText = getText;
 function textContent(node) {
     if (Array.isArray(node))
         return node.map(textContent).join("");
-    if (domhandler_1.isTag(node))
+    if ((0, domhandler_1.hasChildren)(node) && !(0, domhandler_1.isComment)(node)) {
         return textContent(node.children);
-    if (domhandler_1.isCDATA(node))
-        return textContent(node.children);
-    if (domhandler_1.isText(node))
+    }
+    if ((0, domhandler_1.isText)(node))
         return node.data;
     return "";
 }
@@ -7077,12 +7553,10 @@ exports.textContent = textContent;
 function innerText(node) {
     if (Array.isArray(node))
         return node.map(innerText).join("");
-    if (domhandler_1.hasChildren(node) && node.type === domelementtype_1.ElementType.Tag) {
+    if ((0, domhandler_1.hasChildren)(node) && (node.type === domelementtype_1.ElementType.Tag || (0, domhandler_1.isCDATA)(node))) {
         return innerText(node.children);
     }
-    if (domhandler_1.isCDATA(node))
-        return innerText(node.children);
-    if (domhandler_1.isText(node))
+    if ((0, domhandler_1.isText)(node))
         return node.data;
     return "";
 }
@@ -7193,7 +7667,7 @@ exports.getName = getName;
 function nextElementSibling(elem) {
     var _a;
     var next = elem.next;
-    while (next !== null && !domhandler_1.isTag(next))
+    while (next !== null && !(0, domhandler_1.isTag)(next))
         (_a = next, next = _a.next);
     return next;
 }
@@ -7207,7 +7681,7 @@ exports.nextElementSibling = nextElementSibling;
 function prevElementSibling(elem) {
     var _a;
     var prev = elem.prev;
-    while (prev !== null && !domhandler_1.isTag(prev))
+    while (prev !== null && !(0, domhandler_1.isTag)(prev))
         (_a = prev, prev = _a.prev);
     return prev;
 }
@@ -9263,7 +9737,7 @@ Object.defineProperty(exports, "compile", ({ enumerable: true, get: function () 
  * check(6); // `true`
  */
 function nthCheck(formula) {
-    return compile_1.compile(parse_1.parse(formula));
+    return (0, compile_1.compile)((0, parse_1.parse)(formula));
 }
 exports.default = nthCheck;
 
@@ -9278,8 +9752,10 @@ exports.default = nthCheck;
 // Following http://www.w3.org/TR/css3-selectors/#nth-child-pseudo
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parse = void 0;
-// [ ['-'|'+']? INTEGER? {N} [ S* ['-'|'+'] S* INTEGER ]?
-var RE_NTH_ELEMENT = /^([+-]?\d*n)?\s*(?:([+-]?)\s*(\d+))?$/;
+// Whitespace as per https://www.w3.org/TR/selectors-3/#lex is " \t\r\n\f"
+var whitespace = new Set([9, 10, 12, 13, 32]);
+var ZERO = "0".charCodeAt(0);
+var NINE = "9".charCodeAt(0);
 /**
  * Parses an expression.
  *
@@ -9295,22 +9771,57 @@ function parse(formula) {
     else if (formula === "odd") {
         return [2, 1];
     }
-    var parsed = formula.match(RE_NTH_ELEMENT);
-    if (!parsed) {
-        throw new Error("n-th rule couldn't be parsed ('" + formula + "')");
-    }
-    var a;
-    if (parsed[1]) {
-        a = parseInt(parsed[1], 10);
-        if (isNaN(a)) {
-            a = parsed[1].startsWith("-") ? -1 : 1;
+    // Parse [ ['-'|'+']? INTEGER? {N} [ S* ['-'|'+'] S* INTEGER ]?
+    var idx = 0;
+    var a = 0;
+    var sign = readSign();
+    var number = readNumber();
+    if (idx < formula.length && formula.charAt(idx) === "n") {
+        idx++;
+        a = sign * (number !== null && number !== void 0 ? number : 1);
+        skipWhitespace();
+        if (idx < formula.length) {
+            sign = readSign();
+            skipWhitespace();
+            number = readNumber();
+        }
+        else {
+            sign = number = 0;
         }
     }
-    else
-        a = 0;
-    var b = (parsed[2] === "-" ? -1 : 1) *
-        (parsed[3] ? parseInt(parsed[3], 10) : 0);
-    return [a, b];
+    // Throw if there is anything else
+    if (number === null || idx < formula.length) {
+        throw new Error("n-th rule couldn't be parsed ('" + formula + "')");
+    }
+    return [a, sign * number];
+    function readSign() {
+        if (formula.charAt(idx) === "-") {
+            idx++;
+            return -1;
+        }
+        if (formula.charAt(idx) === "+") {
+            idx++;
+        }
+        return 1;
+    }
+    function readNumber() {
+        var start = idx;
+        var value = 0;
+        while (idx < formula.length &&
+            formula.charCodeAt(idx) >= ZERO &&
+            formula.charCodeAt(idx) <= NINE) {
+            value = value * 10 + (formula.charCodeAt(idx) - ZERO);
+            idx++;
+        }
+        // Return `null` if we didn't read anything.
+        return idx === start ? null : value;
+    }
+    function skipWhitespace() {
+        while (idx < formula.length &&
+            whitespace.has(formula.charCodeAt(idx))) {
+            idx++;
+        }
+    }
 }
 exports.parse = parse;
 
@@ -18013,7 +18524,7 @@ var __createBinding;
                 ar[i] = from[i];
             }
         }
-        return to.concat(ar || from);
+        return to.concat(ar || Array.prototype.slice.call(from));
     };
 
     __await = function (v) {
@@ -18202,7 +18713,7 @@ const cheerio = __nccwpck_require__(4612)
 const https = __nccwpck_require__(7211)
 const fs = __nccwpck_require__(5747);
 
-https.get(`https://agg.me/posts/`, res => {
+https.get(`https://ryan.pub/posts/`, res => {
   let data = ""
   res.on("data", function (chunk) {
     data += chunk;
@@ -18211,7 +18722,7 @@ https.get(`https://agg.me/posts/`, res => {
     console.log("[success] Pull Recent Posts")
     const $ = cheerio.load(data)
     const result = $('.archive-item a').map((i, v) => {
-      return `- [${v.children[0].data}](https://agg.me${v.attribs.href})`
+      return `- [${v.children[0].data}](https://ryan.pub${v.attribs.href})`
     })
     const targetText = Array.prototype.join.call(result, "\n")
 

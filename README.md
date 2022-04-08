@@ -10,12 +10,12 @@ Here are some ideas to get you started:
 - 📊 Diverse platform and programming language background
 - 🦾 Currently working on low-code
 - 🚧 Currently learning DevOps
-- 💬 Ask me anything in [here](https://github.com/A-GG/A-GG/issues) 
+- 💬 Ask me anything in [here](https://github.com/gemryan/gemryan/issues) 
 - 📖 Some individual ideas, technologies, reading reflections are posted in my blog
 - 🍻 If you are interested, welcome to exchange.
 
 
-<img align="right" src="https://github-readme-stats.vercel.app/api?username=A-GG&show_icons=true&icon_color=0366d6&text_color=24292e&bg_color=ffffff&hide_title=true" />
+<img align="right" src="https://github-readme-stats.vercel.app/api?username=gemryan&show_icons=true&icon_color=0366d6&text_color=24292e&bg_color=ffffff&hide_title=true" />
 
 
 ### Recent Posts
@@ -35,4 +35,4 @@ Here are some ideas to get you started:
 [comment]:<article-list>
 
 
-If you want read more, click [here](https://agg.me)
+If you want read more, click [here](https://ryan.pub)

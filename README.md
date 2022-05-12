@@ -21,6 +21,7 @@ Here are some ideas to get you started:
 ### Recent Posts
 
 [comment]:<article-list>
+- [在-Gatsby-MDX-中使用- LaTeX](https://w1zd.xyz/在-Gatsby-MDX-中使用- LaTeX/)
 - [Vue2 中的 Global Event Bus](https://w1zd.xyz/Vue中的Global-Event-Bus/)
 - [家庭布网实录](https://w1zd.xyz/家庭布网实录/)
 - [AuthorziedKey配置小记](https://w1zd.xyz/AuthorziedKey配置小记/)
@@ -30,7 +31,6 @@ Here are some ideas to get you started:
 - [Prismjs 代码高亮支持语言列表](https://w1zd.xyz/Prismjs-Highlight-Supported-Language-List/)
 - [GitHub Actions 入门](https://w1zd.xyz/GithubActions入门/)
 - [HTTP 会话机制及 JWT 深入浅出](https://w1zd.xyz/HTTP会话机制及JWT原理浅析/)
-- [Headless Server 是个什么东西？](https://w1zd.xyz/Headless-Server-是什么意思？/)
 
 [comment]:<article-list>
 

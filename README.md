@@ -35,4 +35,4 @@ Here are some ideas to get you started:
 [comment]:<article-list>
 
 
-If you want read more, click [here](https://w1zd.xyz)
+If you want read more, click [here](https://wizd.dev)

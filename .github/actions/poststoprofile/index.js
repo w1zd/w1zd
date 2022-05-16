@@ -2,7 +2,7 @@ const cheerio = require('cheerio')
 const https = require('https')
 const fs = require('fs');
 
-https.get(`https://w1zd.xyz/posts/`, res => {
+https.get(`https://wizd.dev/posts/`, res => {
   let data = ""
   res.on("data", function (chunk) {
     data += chunk;
@@ -11,7 +11,7 @@ https.get(`https://w1zd.xyz/posts/`, res => {
     console.log("[success] Pull Recent Posts")
     const $ = cheerio.load(data)
     const result = $('.archive-item a').map((i, v) => {
-      return `- [${v.children[0].data}](https://w1zd.xyz${v.attribs.href})`
+      return `- [${v.children[0].data}](https://wizd.dev${v.attribs.href})`
     })
     const targetText = Array.prototype.join.call(result, "\n")
 

@@ -18713,7 +18713,7 @@ const cheerio = __nccwpck_require__(4612)
 const https = __nccwpck_require__(7211)
 const fs = __nccwpck_require__(5747);
 
-https.get(`https://w1zd.xyz/posts/`, res => {
+https.get(`https://wizd.dev/posts/`, res => {
   let data = ""
   res.on("data", function (chunk) {
     data += chunk;
@@ -18722,7 +18722,7 @@ https.get(`https://w1zd.xyz/posts/`, res => {
     console.log("[success] Pull Recent Posts")
     const $ = cheerio.load(data)
     const result = $('.archive-item a').map((i, v) => {
-      return `- [${v.children[0].data}](https://w1zd.xyz${v.attribs.href})`
+      return `- [${v.children[0].data}](https://wizd.dev${v.attribs.href})`
     })
     const targetText = Array.prototype.join.call(result, "\n")
 

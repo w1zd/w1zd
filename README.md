@@ -21,7 +21,7 @@ Here are some ideas to get you started:
 ### Recent Posts
 
 [comment]:<article-list>
-- [在 Gatsby MDX 中使用 LaTeX](https://wizd.dev/在-Gatsby-MDX-中使用- LaTeX/)
+- [在 Gatsby MDX 中使用 LaTeX](https://wizd.dev/在-Gatsby-MDX-中使用-LaTeX/)
 - [Vue2 中的 Global Event Bus](https://wizd.dev/Vue中的Global-Event-Bus/)
 - [家庭布网实录](https://wizd.dev/家庭布网实录/)
 - [AuthorziedKey配置小记](https://wizd.dev/AuthorziedKey配置小记/)

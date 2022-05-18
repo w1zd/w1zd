@@ -21,6 +21,7 @@ Here are some ideas to get you started:
 ### Recent Posts
 
 [comment]:<article-list>
+- [NAND as Universal Gate](https://wizd.dev/NAND-as-Universal-Gate/)
 - [在 Gatsby MDX 中使用 LaTeX](https://wizd.dev/在-Gatsby-MDX-中使用-LaTeX/)
 - [Vue2 中的 Global Event Bus](https://wizd.dev/Vue中的Global-Event-Bus/)
 - [家庭布网实录](https://wizd.dev/家庭布网实录/)
@@ -30,7 +31,6 @@ Here are some ideas to get you started:
 - [定时任务 cron 使用说明](https://wizd.dev/定时任务CRON使用说明/)
 - [Prismjs 代码高亮支持语言列表](https://wizd.dev/Prismjs-Highlight-Supported-Language-List/)
 - [GitHub Actions 入门](https://wizd.dev/GithubActions入门/)
-- [HTTP 会话机制及 JWT 深入浅出](https://wizd.dev/HTTP会话机制及JWT原理浅析/)
 
 [comment]:<article-list>
 
